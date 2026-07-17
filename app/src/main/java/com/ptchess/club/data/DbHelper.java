@@ -21,7 +21,7 @@ import com.ptchess.club.security.PasswordHasher;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "ptchess.db";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3;
 
     /** The main app admin: extra powers (verify clubs) are keyed to this email. */
     public static final String SUPER_ADMIN_EMAIL = "noamslutski@gmail.com";
@@ -70,6 +70,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 + "role TEXT NOT NULL,"
                 + "status TEXT NOT NULL,"
                 + "club_id INTEGER NOT NULL DEFAULT 0,"
+                + "rating INTEGER NOT NULL DEFAULT 0,"
                 + "created_at INTEGER)");
 
         db.execSQL("CREATE TABLE " + T_GROUPS + " ("
@@ -183,7 +184,7 @@ public class DbHelper extends SQLiteOpenHelper {
     // ---------------------------------------------------------------- seeding
 
     private long insertUser(SQLiteDatabase db, String name, String email, String password,
-                            String phone, Role role, String status, long clubId) {
+                            String phone, Role role, String status, long clubId, int rating) {
         ContentValues v = new ContentValues();
         v.put("full_name", name);
         v.put("email", email.toLowerCase());
@@ -192,6 +193,7 @@ public class DbHelper extends SQLiteOpenHelper {
         v.put("role", role.name());
         v.put("status", status);
         v.put("club_id", clubId);
+        v.put("rating", rating);
         v.put("created_at", System.currentTimeMillis());
         return db.insert(T_USERS, null, v);
     }
@@ -208,24 +210,24 @@ public class DbHelper extends SQLiteOpenHelper {
     private void seed(SQLiteDatabase db) {
         // Super admin owns the founding, verified club.
         long noam = insertUser(db, "נועם סלוצקי", SUPER_ADMIN_EMAIL,
-                "Noam#2026", "+972500000000", Role.ADMIN, User.STATUS_ACTIVE, 0);
+                "Noam#2026", "+972500000000", Role.ADMIN, User.STATUS_ACTIVE, 0, 0);
         long club = insertClub(db, "מועדון השחמט פתח תקווה", noam, true);
         ContentValues cu = new ContentValues();
         cu.put("club_id", club);
         db.update(T_USERS, cu, "_id = ?", new String[]{String.valueOf(noam)});
 
         long admin = insertUser(db, "מנהל המועדון", "admin@ptchess.co.il",
-                "Admin#2026", "+972500000001", Role.ADMIN, User.STATUS_ACTIVE, club);
+                "Admin#2026", "+972500000001", Role.ADMIN, User.STATUS_ACTIVE, club, 0);
         long tutor = insertUser(db, "דוד לוי", "tutor@ptchess.co.il",
-                "Tutor#2026", "+972500000002", Role.TUTOR, User.STATUS_ACTIVE, club);
+                "Tutor#2026", "+972500000002", Role.TUTOR, User.STATUS_ACTIVE, club, 2100);
         long child1 = insertUser(db, "יונתן כהן", "child@ptchess.co.il",
-                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE, club);
+                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE, club, 1600);
         long child2 = insertUser(db, "מאיה פרץ", "maya@ptchess.co.il",
-                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE, club);
+                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE, club, 1200);
         long parent = insertUser(db, "רונית כהן", "parent@ptchess.co.il",
-                "Parent#2026", "+972500000003", Role.PARENT, User.STATUS_ACTIVE, club);
+                "Parent#2026", "+972500000003", Role.PARENT, User.STATUS_ACTIVE, club, 0);
         insertUser(db, "איתי גולן", "pending@ptchess.co.il",
-                "Pending#2026", null, Role.CHILD, User.STATUS_PENDING, club);
+                "Pending#2026", null, Role.CHILD, User.STATUS_PENDING, club, 0);
 
         ContentValues pc = new ContentValues();
         pc.put("parent_id", parent);
@@ -269,6 +271,22 @@ public class DbHelper extends SQLiteOpenHelper {
 
         insertAssignment(db, club, gA, "תרגילי מט בשניים",
                 "פתרו את 10 התרגילים המצורפים והביאו למפגש הבא.", null, "2026-07-25", tutor);
+
+        // A small club roster so name-based semi-auto approval can be demoed.
+        insertPlayer(db, club, "IL-1001", "דניאל כהן", 1450, "ISR");
+        insertPlayer(db, club, "IL-1002", "נועה לוי", 1320, "ISR");
+        insertPlayer(db, club, "IL-1003", "יונתן כהן", 1600, "ISR");
+    }
+
+    private void insertPlayer(SQLiteDatabase db, long clubId, String externalId,
+                              String name, int rating, String fed) {
+        ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
+        v.put("external_id", externalId);
+        v.put("full_name", name);
+        v.put("rating", rating);
+        v.put("federation", fed);
+        db.insertWithOnConflict(T_PLAYERS, null, v, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     private long insertGroup(SQLiteDatabase db, long clubId, String name,

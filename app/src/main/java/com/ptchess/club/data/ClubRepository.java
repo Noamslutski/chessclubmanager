@@ -11,6 +11,7 @@ import com.ptchess.club.data.model.Book;
 import com.ptchess.club.data.model.Club;
 import com.ptchess.club.data.model.Group;
 import com.ptchess.club.data.model.NewsItem;
+import com.ptchess.club.data.model.Player;
 import com.ptchess.club.data.model.Puzzle;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.TournamentResult;
@@ -59,7 +60,8 @@ public final class ClubRepository {
     /** Registration outcome. */
     public static class RegisterResult {
         public enum Status {
-            SUCCESS_PENDING, SUCCESS_PARENT, SUCCESS_CLUB_CREATED, EMAIL_EXISTS, INVALID
+            SUCCESS_PENDING, SUCCESS_AUTO_APPROVED, SUCCESS_PARENT, SUCCESS_CLUB_CREATED,
+            EMAIL_EXISTS, INVALID
         }
         public final Status status;
         public final String linkedChildName; // set when SUCCESS_PARENT
@@ -102,6 +104,9 @@ public final class ClubRepository {
         long clubId;
         Role role;
         String status;
+        int rating = 0;
+        boolean autoApproved = false;
+        String matchedName = null;
         if (linkedChild != null) {
             clubId = linkedChild.clubId;
             role = Role.PARENT;
@@ -114,7 +119,17 @@ public final class ClubRepository {
             if (joinClubId <= 0) return new RegisterResult(RegisterResult.Status.INVALID, null);
             clubId = joinClubId;
             role = Role.CHILD;
-            status = User.STATUS_PENDING;
+            // Semi-automatic approval: if the name matches an imported club player,
+            // approve immediately and adopt that player's rating.
+            Player match = findRosterPlayerByName(joinClubId, fullName);
+            if (match != null) {
+                status = User.STATUS_ACTIVE;
+                rating = match.rating;
+                autoApproved = true;
+                matchedName = match.fullName;
+            } else {
+                status = User.STATUS_PENDING;
+            }
         }
 
         ContentValues v = new ContentValues();
@@ -125,6 +140,7 @@ public final class ClubRepository {
         v.put("role", role.name());
         v.put("status", status);
         v.put("club_id", clubId);
+        v.put("rating", rating);
         v.put("created_at", System.currentTimeMillis());
 
         long newId = helper.getWritableDatabase().insert(DbHelper.T_USERS, null, v);
@@ -144,7 +160,37 @@ public final class ClubRepository {
             linkParentToChild(newId, linkedChild.id);
             return new RegisterResult(RegisterResult.Status.SUCCESS_PARENT, linkedChild.fullName);
         }
+        if (autoApproved) {
+            return new RegisterResult(RegisterResult.Status.SUCCESS_AUTO_APPROVED, matchedName);
+        }
         return new RegisterResult(RegisterResult.Status.SUCCESS_PENDING, null);
+    }
+
+    /**
+     * Finds a club roster player whose name matches the given name (case- and
+     * spacing-insensitive; also tolerates "Last, First" vs "First Last").
+     */
+    public Player findRosterPlayerByName(long clubId, String name) {
+        String target = normalizeName(name);
+        if (target.isEmpty()) return null;
+        for (Player p : getPlayers(clubId)) {
+            String cand = normalizeName(p.fullName);
+            if (cand.equals(target) || flipComma(cand).equals(target)) return p;
+        }
+        return null;
+    }
+
+    private static String normalizeName(String s) {
+        if (s == null) return "";
+        return s.trim().toLowerCase().replaceAll("\\s+", " ");
+    }
+
+    private static String flipComma(String normalized) {
+        int comma = normalized.indexOf(',');
+        if (comma < 0) return normalized;
+        String last = normalized.substring(0, comma).trim();
+        String first = normalized.substring(comma + 1).trim();
+        return (first + " " + last).trim();
     }
 
     public AuthResult authenticate(String email, String password) {
@@ -160,7 +206,7 @@ public final class ClubRepository {
         String hash = null;
         User user = null;
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id", "password_hash"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id", "rating", "password_hash"},
                 "email = ?", new String[]{normEmail}, null, null, null)) {
             if (c.moveToFirst()) {
                 user = readUser(c);
@@ -267,7 +313,7 @@ public final class ClubRepository {
     public User getUserById(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id", "rating"},
                 "_id = ?", new String[]{String.valueOf(id)}, null, null, null)) {
             return c.moveToFirst() ? readUser(c) : null;
         }
@@ -276,7 +322,7 @@ public final class ClubRepository {
     public User getUserByEmail(String email) {
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id", "rating"},
                 "email = ?", new String[]{InputValidator.normalizeEmail(email)},
                 null, null, null)) {
             return c.moveToFirst() ? readUser(c) : null;
@@ -326,7 +372,7 @@ public final class ClubRepository {
         List<User> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id", "rating"},
                 where, args, null, null, order)) {
             while (c.moveToNext()) out.add(readUser(c));
         }
@@ -334,6 +380,8 @@ public final class ClubRepository {
     }
 
     private User readUser(Cursor c) {
+        int ratingIdx = c.getColumnIndex("rating"); // not every projection selects it
+        int rating = ratingIdx >= 0 ? c.getInt(ratingIdx) : 0;
         return new User(
                 c.getLong(c.getColumnIndexOrThrow("_id")),
                 c.getString(c.getColumnIndexOrThrow("full_name")),
@@ -341,7 +389,8 @@ public final class ClubRepository {
                 c.getString(c.getColumnIndexOrThrow("phone")),
                 Role.fromName(c.getString(c.getColumnIndexOrThrow("role"))),
                 c.getString(c.getColumnIndexOrThrow("status")),
-                c.getLong(c.getColumnIndexOrThrow("club_id")));
+                c.getLong(c.getColumnIndexOrThrow("club_id")),
+                rating);
     }
 
     // ============================================================ PARENT / CHILD

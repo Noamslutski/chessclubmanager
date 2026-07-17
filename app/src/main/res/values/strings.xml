@@ -43,6 +43,7 @@
     <string name="err_account_rejected">הבקשה נדחתה. פנה למנהל המועדון.</string>
     <string name="err_too_many_attempts">יותר מדי נסיונות. נסה שוב בעוד %1$d דקות.</string>
     <string name="msg_register_pending">ההרשמה נקלטה! חשבונך ימתין לאישור מנהל המועדון.</string>
+    <string name="msg_auto_approved">השם נמצא ברשימת שחקני המועדון — חשבונך אושר אוטומטית!</string>
     <string name="msg_reset_sent">אם הכתובת רשומה, יישלח אליה קישור לאיפוס.</string>
     <string name="msg_parent_linked">קושרת בהצלחה כהורה של %1$s</string>
 

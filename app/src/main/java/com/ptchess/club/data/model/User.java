@@ -12,11 +12,12 @@ public class User {
     public Role role;
     public String status;
     public long clubId;
+    public int rating; // federation rating (0 = unknown)
 
     public User() { }
 
     public User(long id, String fullName, String email, String phone,
-                Role role, String status, long clubId) {
+                Role role, String status, long clubId, int rating) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
@@ -24,6 +25,7 @@ public class User {
         this.role = role;
         this.status = status;
         this.clubId = clubId;
+        this.rating = rating;
     }
 
     public boolean isActive() {

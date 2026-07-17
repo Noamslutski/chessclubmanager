@@ -40,6 +40,7 @@
     <string name="err_account_rejected">Request was rejected. Contact the club admin.</string>
     <string name="err_too_many_attempts">Too many attempts. Try again in %1$d minutes.</string>
     <string name="msg_register_pending">Registration received! Your account is awaiting admin approval.</string>
+    <string name="msg_auto_approved">Your name was found in the club roster — account approved automatically!</string>
     <string name="msg_reset_sent">If the address is registered, a reset link will be sent.</string>
     <string name="msg_parent_linked">Linked successfully as parent of %1$s</string>
 

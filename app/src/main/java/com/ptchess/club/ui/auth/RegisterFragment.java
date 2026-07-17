@@ -151,6 +151,10 @@ public class RegisterFragment extends Fragment {
                 UiUtils.toast(requireContext(), R.string.msg_register_pending);
                 auth().showLogin();
                 break;
+            case SUCCESS_AUTO_APPROVED:
+                UiUtils.toast(requireContext(), R.string.msg_auto_approved);
+                auth().showLogin();
+                break;
             case SUCCESS_PARENT:
                 UiUtils.toast(requireContext(),
                         getString(R.string.msg_parent_linked, result.linkedChildName));
