@@ -346,6 +346,15 @@ public final class ClubRepository {
                 "full_name ASC");
     }
 
+    /** Club staff (admins + tutors) for the public staff directory, strongest first. */
+    public List<User> getClubStaff(long clubId) {
+        return queryUsers(
+                "club_id = ? AND status = ? AND role IN (?, ?)",
+                new String[]{String.valueOf(clubId), User.STATUS_ACTIVE,
+                        Role.ADMIN.name(), Role.TUTOR.name()},
+                "CASE role WHEN 'ADMIN' THEN 0 ELSE 1 END, rating DESC, full_name ASC");
+    }
+
     public boolean approveUser(long id) {
         return updateStatus(id, User.STATUS_ACTIVE);
     }

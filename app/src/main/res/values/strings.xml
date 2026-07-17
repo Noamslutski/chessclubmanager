@@ -64,6 +64,11 @@
     <string name="nav_tournaments">תוצאות טורנירים</string>
     <string name="nav_children">הילדים שלי</string>
     <string name="nav_settings">הגדרות</string>
+    <string name="nav_staff">צוות המועדון</string>
+    <string name="staff_title">מדריכים ומאמנים</string>
+    <string name="no_staff">לא נמצא צוות.</string>
+    <string name="contact">יצירת קשר</string>
+    <string name="rating_label">מד כושר: %1$d</string>
     <string name="nav_watch">צפייה</string>
     <string name="nav_players">שחקנים</string>
     <string name="nav_verify_clubs">אימות מועדונים</string>

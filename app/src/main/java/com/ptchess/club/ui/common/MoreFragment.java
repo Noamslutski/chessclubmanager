@@ -56,6 +56,10 @@ public class MoreFragment extends Fragment {
                 getString(R.string.nav_tournaments),
                 () -> host.openSection(new TournamentsFragment(), getString(R.string.nav_tournaments))));
 
+        items.add(new MoreAdapter.MoreItem(R.drawable.ic_person,
+                getString(R.string.nav_staff),
+                () -> host.openSection(new StaffFragment(), getString(R.string.nav_staff))));
+
         if (user.role == Role.PARENT) {
             items.add(new MoreAdapter.MoreItem(R.drawable.ic_groups,
                     getString(R.string.nav_children),
