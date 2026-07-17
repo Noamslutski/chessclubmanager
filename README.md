@@ -149,6 +149,44 @@ app/src/main/java/com/ptchess/club/
 
 ---
 
+## 🔥 Firebase backend (optional, powers the auto features)
+
+The app runs fully **local/offline** without Firebase. Adding Firebase turns on the shared,
+auto-updating cloud layer — including the **scheduled Lichess puzzle ingestion**.
+
+```
+functions/            Cloud Functions (Node 20)
+  index.js              ingestLichessPuzzles (scheduled) + notifyAdminOnRegistration
+firestore.rules       role-based Firestore security (Auth custom claims)
+storage.rules         file access rules (logos / library / assignments)
+firebase.json         deploy config    ·    .firebaserc  (set your project id)
+```
+
+**Setup**
+
+1. Create a Firebase project → add an Android app with package `com.ptchess.club` →
+   download **`google-services.json`** into `app/`. (The Gradle plugin auto-activates once the
+   file is present; without it the app still builds and runs locally.)
+2. Put your project id in `.firebaserc`, then deploy:
+   ```bash
+   cd functions && npm install && cd ..
+   firebase deploy --only functions,firestore:rules,storage
+   ```
+3. Install the **Trigger Email** Firebase extension (SMTP) so `notifyAdminOnRegistration`
+   can send the admin email.
+
+**What it enables**
+
+- ⏱ **Auto Lichess puzzles** — `ingestLichessPuzzles` runs daily, reconstructs each FEN with
+  `chess.js`, and writes to the shared Firestore `puzzles` pool. The app reads that pool first
+  (`PuzzleCloud`) and only falls back to fetching Lichess directly when Firebase is absent.
+- 📥 Library PDFs, club logos/banners and assignment files → **Firebase Storage**.
+- ✉️ Admin email on new registrations; password-reset emails via Firebase Auth (after the
+  planned login migration to Firebase Auth, which the security rules already target).
+
+> **Billing:** the scheduled function needs the **Blaze** plan (generous free tier — this
+> workload is effectively free). Firestore/Storage/Auth work on the free Spark plan.
+
 ## 🛣 Roadmap &amp; limitations (need a backend)
 
 The following are intentionally **not faked** and require a backend/data pipeline to be real:
