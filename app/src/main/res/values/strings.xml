@@ -184,6 +184,17 @@
     <string name="tournament_standing">מקום %1$d</string>
     <string name="import_results">ייבוא תוצאות</string>
     <string name="no_results">לא נמצאו תוצאות.</string>
+    <string name="tab_results">התוצאות שלי</string>
+    <string name="tab_register">הרשמה לטורנירים</string>
+    <string name="register_link">להרשמה</string>
+    <string name="places_left">%1$d מקומות פנויים</string>
+    <string name="rating_range_req">דירוג: %1$d–%2$d</string>
+    <string name="rating_max_req">דירוג עד %1$d</string>
+    <string name="rating_min_req">דירוג מ־%1$d</string>
+    <string name="fed_no_key">שירות הטורנירים אינו מוגדר (חסר מפתח API).</string>
+    <string name="fed_none">לא נמצאו טורנירים מתאימים לדירוג שלך.</string>
+    <string name="fed_note_rating">מוצגים רק טורנירים שמתאימים לדירוג שלך (%1$d).</string>
+    <string name="fed_note_no_rating">אין לך דירוג רשום — מוצגים כל הטורנירים.</string>
 
     <!-- Admin -->
     <string name="admin_title">מרכז הניהול</string>

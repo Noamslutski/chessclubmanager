@@ -173,6 +173,17 @@
     <string name="tournament_standing">Place %1$d</string>
     <string name="import_results">Import results</string>
     <string name="no_results">No results found.</string>
+    <string name="tab_results">My results</string>
+    <string name="tab_register">Register</string>
+    <string name="register_link">Register</string>
+    <string name="places_left">%1$d places left</string>
+    <string name="rating_range_req">Rating: %1$d–%2$d</string>
+    <string name="rating_max_req">Rating up to %1$d</string>
+    <string name="rating_min_req">Rating from %1$d</string>
+    <string name="fed_no_key">Tournament service is not configured (missing API key).</string>
+    <string name="fed_none">No tournaments match your rating right now.</string>
+    <string name="fed_note_rating">Showing only tournaments you can enter at your rating (%1$d).</string>
+    <string name="fed_note_no_rating">You have no rating on file — showing all tournaments.</string>
 
     <string name="admin_title">Admin center</string>
     <string name="pending_approvals">Pending registrations</string>
