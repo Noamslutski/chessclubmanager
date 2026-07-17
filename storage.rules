@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Files are organised by club. Read is limited to club members (club logos are
+// public); uploads are limited to staff/admins. Claims (clubId, role) come from
+// Firebase Auth custom claims set by a Cloud Function.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() { return request.auth != null; }
+    function inClub(clubId) { return signedIn() && request.auth.token.clubId == clubId; }
+    function isStaff() { return signedIn()
+        && (request.auth.token.role == "TUTOR" || request.auth.token.role == "ADMIN"); }
+    function isAdmin() { return signedIn() && request.auth.token.role == "ADMIN"; }
+    function underImageLimit() { return request.resource.size < 8 * 1024 * 1024; }
+    function underFileLimit() { return request.resource.size < 40 * 1024 * 1024; }
+
+    // Club logos & banners — publicly readable, admin-writable images.
+    match /logos/{clubId}/{fileName} {
+      allow read: if true;
+      allow write: if inClub(clubId) && isAdmin()
+                   && request.resource.contentType.matches("image/.*") && underImageLimit();
+    }
+
+    // Library book PDFs — club members read, staff upload.
+    match /library/{clubId}/{fileName} {
+      allow read: if inClub(clubId);
+      allow write: if inClub(clubId) && isStaff() && underFileLimit();
+    }
+
+    // Assignment / homework attachments — club members read, staff upload.
+    match /assignments/{clubId}/{fileName} {
+      allow read: if inClub(clubId);
+      allow write: if inClub(clubId) && isStaff() && underFileLimit();
+    }
+  }
+}

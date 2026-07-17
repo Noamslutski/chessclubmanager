@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// Access is driven by Firebase Auth custom claims (clubId, role) set by a
+// Cloud Function when an account is approved. Until the app migrates its login
+// to Firebase Auth these rules block direct client access — the Cloud Functions
+// use the Admin SDK, which bypasses rules, so server-side ingestion still works.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function myClub() { return request.auth.token.clubId; }
+    function myRole() { return request.auth.token.role; }
+    function isStaff() { return myRole() == "TUTOR" || myRole() == "ADMIN"; }
+    function isAdmin() { return myRole() == "ADMIN"; }
+    function inClub(clubId) { return signedIn() && myClub() == clubId; }
+
+    // Shared puzzle pool — read by any signed-in user, written only by functions.
+    match /puzzles/{puzzleId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Clubs and their per-club content.
+    match /clubs/{clubId} {
+      allow read: if inClub(clubId);
+      allow update: if inClub(clubId) && isAdmin();
+      allow create: if signedIn();
+
+      match /{collection}/{docId} {
+        allow read: if inClub(clubId);
+        allow create, update, delete: if inClub(clubId) && isStaff();
+      }
+    }
+
+    // User profiles.
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId
+                  || (signedIn() && isAdmin() && resource.data.clubId == myClub());
+      allow update: if request.auth.uid == userId
+                    || (signedIn() && isAdmin() && resource.data.clubId == myClub());
+      allow create: if request.auth.uid == userId;
+    }
+
+    // Registration requests: a signed-up user may create their own; admins read.
+    match /registrations/{regId} {
+      allow create: if signedIn();
+      allow read, update, delete: if signedIn() && isAdmin();
+    }
+
+    // Outgoing mail queue (Trigger Email extension) — functions only.
+    match /mail/{docId} {
+      allow read, write: if false;
+    }
+  }
+}
