@@ -858,6 +858,25 @@ public final class ClubRepository {
         return c != null && c.verified;
     }
 
+    public boolean updateClubProfile(long clubId, String description, String address,
+                                     String contactPhone, String hall,
+                                     String logoUri, String bannerUri) {
+        ContentValues v = new ContentValues();
+        v.put("description", InputValidator.sanitizeText(description));
+        v.put("address", InputValidator.sanitizeLine(address, 200));
+        v.put("contact_phone", InputValidator.sanitizeLine(contactPhone, 30));
+        v.put("hall", InputValidator.sanitizeLine(hall, 120));
+        if (logoUri != null) v.put("logo_uri", logoUri);
+        if (bannerUri != null) v.put("banner_uri", bannerUri);
+        return helper.getWritableDatabase().update(DbHelper.T_CLUBS, v,
+                "_id = ?", new String[]{String.valueOf(clubId)}) > 0;
+    }
+
+    /** All groups of a club (for the public weekly schedule), regardless of viewer. */
+    public List<Group> getClubGroups(long clubId) {
+        return queryGroups("g.club_id = ?", new String[]{String.valueOf(clubId)});
+    }
+
     public boolean setClubVerified(long clubId, boolean verified) {
         ContentValues v = new ContentValues();
         v.put("verified", verified ? 1 : 0);
@@ -869,15 +888,25 @@ public final class ClubRepository {
         List<Club> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
         StringBuilder sql = new StringBuilder(
-                "SELECT c._id, c.name, c.owner_id, COALESCE(u.full_name,''), c.verified "
+                "SELECT c._id, c.name, c.owner_id, COALESCE(u.full_name,''), c.verified, "
+                        + "COALESCE(c.description,''), COALESCE(c.address,''), "
+                        + "COALESCE(c.contact_phone,''), COALESCE(c.hall,''), "
+                        + "COALESCE(c.logo_uri,''), COALESCE(c.banner_uri,'') "
                         + "FROM " + DbHelper.T_CLUBS + " c "
                         + "LEFT JOIN " + DbHelper.T_USERS + " u ON u._id = c.owner_id ");
         if (where != null) sql.append("WHERE ").append(where).append(' ');
         sql.append("ORDER BY c.name");
         try (Cursor c = db.rawQuery(sql.toString(), args)) {
             while (c.moveToNext()) {
-                out.add(new Club(c.getLong(0), c.getString(1), c.getLong(2),
-                        c.getString(3), c.getInt(4) == 1));
+                Club club = new Club(c.getLong(0), c.getString(1), c.getLong(2),
+                        c.getString(3), c.getInt(4) == 1);
+                club.description = c.getString(5);
+                club.address = c.getString(6);
+                club.contactPhone = c.getString(7);
+                club.hall = c.getString(8);
+                club.logoUri = c.getString(9);
+                club.bannerUri = c.getString(10);
+                out.add(club);
             }
         }
         return out;

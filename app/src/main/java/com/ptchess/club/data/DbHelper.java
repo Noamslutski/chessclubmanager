@@ -21,7 +21,7 @@ import com.ptchess.club.security.PasswordHasher;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "ptchess.db";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
 
     /** The main app admin: extra powers (verify clubs) are keyed to this email. */
     public static final String SUPER_ADMIN_EMAIL = "noamslutski@gmail.com";
@@ -59,6 +59,12 @@ public class DbHelper extends SQLiteOpenHelper {
                 + "name TEXT NOT NULL,"
                 + "owner_id INTEGER,"
                 + "verified INTEGER NOT NULL DEFAULT 0,"
+                + "description TEXT,"
+                + "address TEXT,"
+                + "contact_phone TEXT,"
+                + "hall TEXT,"
+                + "logo_uri TEXT,"
+                + "banner_uri TEXT,"
                 + "created_at INTEGER)");
 
         db.execSQL("CREATE TABLE " + T_USERS + " ("
@@ -215,6 +221,13 @@ public class DbHelper extends SQLiteOpenHelper {
         ContentValues cu = new ContentValues();
         cu.put("club_id", club);
         db.update(T_USERS, cu, "_id = ?", new String[]{String.valueOf(noam)});
+
+        ContentValues cp = new ContentValues();
+        cp.put("description", "מועדון השחמט של פתח תקווה — אימונים, טורנירים וקבוצות לכל הרמות.");
+        cp.put("address", "רחוב ההגנה 1, פתח תקווה");
+        cp.put("contact_phone", "+972500000001");
+        cp.put("hall", "אולם המשחקים, מרכז הנוער");
+        db.update(T_CLUBS, cp, "_id = ?", new String[]{String.valueOf(club)});
 
         long admin = insertUser(db, "מנהל המועדון", "admin@ptchess.co.il",
                 "Admin#2026", "+972500000001", Role.ADMIN, User.STATUS_ACTIVE, club, 0);

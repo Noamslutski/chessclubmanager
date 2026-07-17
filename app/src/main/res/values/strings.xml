@@ -65,6 +65,17 @@
     <string name="nav_children">הילדים שלי</string>
     <string name="nav_settings">הגדרות</string>
     <string name="nav_staff">צוות המועדון</string>
+    <string name="nav_club">על המועדון</string>
+    <string name="club_about">אודות</string>
+    <string name="club_address_label">כתובת</string>
+    <string name="club_contact_label">יצירת קשר</string>
+    <string name="club_hall_label">אולם המשחקים</string>
+    <string name="club_schedule">מערכת שעות שבועית</string>
+    <string name="edit_profile">עריכת פרופיל</string>
+    <string name="choose_logo">בחירת לוגו</string>
+    <string name="choose_banner">בחירת באנר</string>
+    <string name="profile_saved">הפרופיל נשמר</string>
+    <string name="no_schedule">טרם נקבעו קבוצות.</string>
     <string name="staff_title">מדריכים ומאמנים</string>
     <string name="no_staff">לא נמצא צוות.</string>
     <string name="contact">יצירת קשר</string>

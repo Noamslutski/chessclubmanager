@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <EditText
+            android:id="@+id/editDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:minLines="3"
+            android:hint="@string/club_about"
+            android:inputType="textMultiLine"
+            android:maxLength="4000"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:importantForAutofill="no" />
+
+        <EditText
+            android:id="@+id/editAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/club_address_label"
+            android:inputType="text"
+            android:maxLength="200"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:importantForAutofill="no" />
+
+        <EditText
+            android:id="@+id/editContact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/phone"
+            android:inputType="phone"
+            android:maxLength="30"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:importantForAutofill="no" />
+
+        <EditText
+            android:id="@+id/editHall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/club_hall_label"
+            android:inputType="text"
+            android:maxLength="120"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:importantForAutofill="no" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChooseLogo"
+            style="@style/Widget.PTChess.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/choose_logo" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChooseBanner"
+            style="@style/Widget.PTChess.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/choose_banner" />
+    </LinearLayout>
+</ScrollView>

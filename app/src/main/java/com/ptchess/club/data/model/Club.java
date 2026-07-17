@@ -8,6 +8,14 @@ public class Club {
     /** Verified by the main app admin (noamslutski@gmail.com). */
     public boolean verified;
 
+    // Profile (admin-editable)
+    public String description = "";
+    public String address = "";
+    public String contactPhone = "";
+    public String hall = "";
+    public String logoUri = "";
+    public String bannerUri = "";
+
     public Club(long id, String name, long ownerId, String ownerName, boolean verified) {
         this.id = id;
         this.name = name;

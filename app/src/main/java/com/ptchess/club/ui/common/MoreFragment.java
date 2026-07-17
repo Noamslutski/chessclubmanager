@@ -44,6 +44,10 @@ public class MoreFragment extends Fragment {
         User user = host.getCurrentUser();
         List<MoreAdapter.MoreItem> items = new ArrayList<>();
 
+        items.add(new MoreAdapter.MoreItem(R.drawable.ic_admin,
+                getString(R.string.nav_club),
+                () -> host.openSection(new ClubProfileFragment(), getString(R.string.nav_club))));
+
         items.add(new MoreAdapter.MoreItem(R.drawable.ic_groups,
                 getString(R.string.nav_groups),
                 () -> host.openSection(new GroupsFragment(), getString(R.string.nav_groups))));
