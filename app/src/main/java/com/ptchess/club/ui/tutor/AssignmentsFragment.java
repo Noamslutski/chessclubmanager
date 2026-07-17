@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseFiles;
 import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.Group;
 import com.ptchess.club.data.model.Role;
@@ -154,14 +155,30 @@ public class AssignmentsFragment extends Fragment implements AssignmentAdapter.O
                     Group g = groups.get(groupSpinner.getSelectedItemPosition());
                     String description = desc.getText().toString().trim();
                     String dueDate = due.getText().toString().trim();
-                    String uri = pickedUri;
-                    ClubRepository repo = ClubRepository.getInstance(requireContext());
-                    Async.io(() -> {
-                        repo.addAssignment(user.clubId, g.id, t, description, uri, dueDate, user.id);
-                        Async.main(this::load);
+                    // Upload the attachment to Storage first (if Firebase is on), then save the
+                    // assignment with the resulting URL; without Firebase the local URI is kept.
+                    resolveUpload(pickedUri, fileUrl -> {
+                        ClubRepository repo = ClubRepository.getInstance(requireContext());
+                        Async.io(() -> {
+                            repo.addAssignment(user.clubId, g.id, t, description, fileUrl, dueDate, user.id);
+                            Async.main(this::load);
+                        });
                     });
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    /** Uploads the picked attachment to Storage when Firebase is on; otherwise passes the local URI through. */
+    private void resolveUpload(String pickedFile, java.util.function.Consumer<String> then) {
+        if (pickedFile == null || !FirebaseFiles.enabled(requireContext())) {
+            then.accept(pickedFile);
+            return;
+        }
+        FirebaseFiles.upload(requireContext(), FirebaseFiles.ASSIGNMENTS, user.clubId, Uri.parse(pickedFile),
+                new FirebaseFiles.UploadCb() {
+                    @Override public void onSuccess(String url) { then.accept(url); }
+                    @Override public void onError(String message) { then.accept(pickedFile); }
+                });
     }
 }

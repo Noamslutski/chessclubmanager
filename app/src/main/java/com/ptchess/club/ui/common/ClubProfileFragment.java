@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseFiles;
 import com.ptchess.club.data.model.Club;
 import com.ptchess.club.data.model.Group;
 import com.ptchess.club.data.model.Role;
@@ -157,22 +158,48 @@ public class ClubProfileFragment extends Fragment {
                 .setTitle(R.string.edit_profile)
                 .setView(form)
                 .setPositiveButton(R.string.save, (d, w) -> {
-                    ClubRepository repo = ClubRepository.getInstance(requireContext());
                     String dd = desc.getText().toString();
                     String aa = address.getText().toString();
                     String cc = contact.getText().toString();
                     String hh = hall.getText().toString();
-                    Async.io(() -> {
-                        repo.updateClubProfile(club.id, dd, aa, cc, hh, pickedLogo, pickedBanner);
-                        Async.main(() -> {
-                            if (!isAdded()) return;
-                            UiUtils.toast(requireContext(), R.string.profile_saved);
-                            load();
-                        });
-                    });
+                    // Upload any newly picked images to Storage first (if Firebase is on),
+                    // then persist the resulting URLs; nulls leave the existing images.
+                    resolveUpload(pickedLogo, logoUrl ->
+                            resolveUpload(pickedBanner, bannerUrl ->
+                                    persistProfile(dd, aa, cc, hh, logoUrl, bannerUrl)));
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    /** Uploads a picked image to Storage when Firebase is on; otherwise passes the local URI through. */
+    private void resolveUpload(String pickedUri, java.util.function.Consumer<String> then) {
+        if (pickedUri == null) {
+            then.accept(null);
+            return;
+        }
+        if (!FirebaseFiles.enabled(requireContext())) {
+            then.accept(pickedUri);
+            return;
+        }
+        FirebaseFiles.upload(requireContext(), FirebaseFiles.LOGOS, club.id, Uri.parse(pickedUri),
+                new FirebaseFiles.UploadCb() {
+                    @Override public void onSuccess(String url) { then.accept(url); }
+                    @Override public void onError(String message) { then.accept(pickedUri); }
+                });
+    }
+
+    private void persistProfile(String dd, String aa, String cc, String hh,
+                                String logoUrl, String bannerUrl) {
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
+            repo.updateClubProfile(club.id, dd, aa, cc, hh, logoUrl, bannerUrl);
+            Async.main(() -> {
+                if (!isAdded()) return;
+                UiUtils.toast(requireContext(), R.string.profile_saved);
+                load();
+            });
+        });
     }
 
     // ---- helpers ----
@@ -193,10 +220,8 @@ public class ClubProfileFragment extends Fragment {
             if (!isLogo) iv.setVisibility(View.GONE);
             return;
         }
-        try {
-            iv.setImageURI(Uri.parse(uri));
-            iv.setVisibility(View.VISIBLE);
-        } catch (Exception ignored) { }
+        iv.setVisibility(View.VISIBLE);
+        UiUtils.loadImage(iv, uri); // handles both local content:// and remote Storage URLs
     }
 
     private String persist(@Nullable Uri uri) {

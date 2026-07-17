@@ -3,14 +3,59 @@ package com.ptchess.club.util;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.print.PrintManager;
+import android.widget.ImageView;
 import android.widget.Toast;
+
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /** Small UI helpers: toasts, contact intents (call / WhatsApp), open & print files. */
 public final class UiUtils {
 
     private UiUtils() { }
+
+    /**
+     * Loads an image into an {@link ImageView} from either a local URI
+     * ({@code content://} / {@code file://}) or a remote {@code http(s)} URL —
+     * e.g. a Firebase Storage download URL. Remote images are fetched off the
+     * main thread; local ones use {@link ImageView#setImageURI}.
+     */
+    public static void loadImage(ImageView iv, String uriString) {
+        if (iv == null || uriString == null || uriString.isEmpty()) return;
+        if (uriString.startsWith("http")) {
+            final String url = uriString;
+            Async.io(() -> {
+                Bitmap bmp = downloadBitmap(url);
+                if (bmp != null) Async.main(() -> iv.setImageBitmap(bmp));
+            });
+        } else {
+            try {
+                iv.setImageURI(Uri.parse(uriString));
+            } catch (Exception ignored) { }
+        }
+    }
+
+    private static Bitmap downloadBitmap(String url) {
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            conn.setInstanceFollowRedirects(true);
+            try (InputStream in = conn.getInputStream()) {
+                return BitmapFactory.decodeStream(in);
+            }
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
 
     public static void toast(Context ctx, String msg) {
         Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show();

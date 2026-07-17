@@ -184,7 +184,9 @@ firebase.json         deploy config    ·    .firebaserc  (set your project id)
   local fallback for seeded/offline accounts). Profiles live in `users/{uid}`, and the
   `setUserClaims` function mirrors `role`/`clubId` into Auth custom claims for the rules.
 - ✉️ **Admin email on new registrations** (a `registrations` doc → Trigger Email extension).
-- 📥 Library PDFs, club logos/banners and assignment files → **Firebase Storage** (next step).
+- 📥 **Library PDFs, club logos/banners and assignment files upload to Firebase Storage** and are
+  served from their download URLs (club members read, staff/admins write — enforced by `storage.rules`).
+  Without Firebase the same pickers store the local file URI and everything still works on-device.
 
 > **Billing:** the scheduled function needs the **Blaze** plan (generous free tier — this
 > workload is effectively free). Firestore/Storage/Auth work on the free Spark plan.

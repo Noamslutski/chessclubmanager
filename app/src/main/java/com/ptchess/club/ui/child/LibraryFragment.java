@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseFiles;
 import com.ptchess.club.data.model.Book;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
@@ -134,17 +135,35 @@ public class LibraryFragment extends Fragment implements BookAdapter.OnBookActio
                     String sideKey = LabelMapper.SIDE_KEYS[side.getSelectedItemPosition()];
                     int min = parseInt(rMin.getText().toString(), 0);
                     int max = parseInt(rMax.getText().toString(), 3000);
-                    String uri = pickedUri;
-                    ClubRepository repo = ClubRepository.getInstance(requireContext());
-                    Async.io(() -> {
-                        repo.addBook(user.clubId, t, author.getText().toString().trim(),
-                                language.getText().toString().trim(), categoryKey, sideKey,
-                                min, max, uri, user.id);
-                        Async.main(this::load);
+                    String authorTxt = author.getText().toString().trim();
+                    String languageTxt = language.getText().toString().trim();
+                    // Upload the PDF to Storage first (if Firebase is on), then save the book
+                    // with the resulting URL; without Firebase the local URI is kept.
+                    resolveUpload(pickedUri, fileUrl -> {
+                        ClubRepository repo = ClubRepository.getInstance(requireContext());
+                        Async.io(() -> {
+                            repo.addBook(user.clubId, t, authorTxt, languageTxt, categoryKey, sideKey,
+                                    min, max, fileUrl, user.id);
+                            Async.main(this::load);
+                        });
                     });
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    /** Uploads the picked PDF to Storage when Firebase is on; otherwise passes the local URI through. */
+    private void resolveUpload(String pickedFile, java.util.function.Consumer<String> then) {
+        if (pickedFile == null || !FirebaseFiles.enabled(requireContext())) {
+            then.accept(pickedFile);
+            return;
+        }
+        long clubId = ((MainActivity) requireActivity()).getCurrentUser().clubId;
+        FirebaseFiles.upload(requireContext(), FirebaseFiles.LIBRARY, clubId, Uri.parse(pickedFile),
+                new FirebaseFiles.UploadCb() {
+                    @Override public void onSuccess(String url) { then.accept(url); }
+                    @Override public void onError(String message) { then.accept(pickedFile); }
+                });
     }
 
     private ArrayAdapter<String> spinner(String[] labels) {
