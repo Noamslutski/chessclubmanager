@@ -2,6 +2,8 @@ package com.ptchess.club.ui.common;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.textfield.TextInputEditText;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
 import com.ptchess.club.data.model.Role;
@@ -31,23 +34,30 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Two modes: the player's own tournament <b>results</b>, and <b>registration</b>
- * to real federation tournaments filtered by the player's rating (ineligible
- * ones are hidden). Staff can import results from a CSV in results mode.
+ * to real federation tournaments — browsable by month, searchable by name, and
+ * filtered by the player's rating (ineligible tournaments are hidden).
  */
 public class TournamentsFragment extends Fragment {
 
     private RecyclerView recycler;
-    private TextView emptyView, note;
-    private View loadingBar;
+    private TextView emptyView, note, txtMonth;
+    private View loadingBar, fedControls;
+    private TextInputEditText search;
     private MaterialButton importBtn;
     private User user;
     private boolean resultsMode = true;
+
+    private int fedYear, fedMonth; // 1-based month
+    private String fedQuery = "";
+    private final List<FederationApi.FedTournament> fedEligible = new ArrayList<>();
 
     private ActivityResultLauncher<String[]> csvPicker;
 
@@ -66,10 +76,28 @@ public class TournamentsFragment extends Fragment {
         note = view.findViewById(R.id.txtNote);
         loadingBar = view.findViewById(R.id.loadingBar);
         importBtn = view.findViewById(R.id.btnAction);
+        fedControls = view.findViewById(R.id.fedControls);
+        txtMonth = view.findViewById(R.id.txtMonth);
+        search = view.findViewById(R.id.inputFedSearch);
         recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        Calendar cal = Calendar.getInstance();
+        fedYear = cal.get(Calendar.YEAR);
+        fedMonth = cal.get(Calendar.MONTH) + 1;
 
         boolean staff = user.role == Role.TUTOR || user.role == Role.ADMIN;
         importBtn.setOnClickListener(v -> showImportInfo());
+
+        view.findViewById(R.id.btnPrevMonth).setOnClickListener(v -> shiftMonth(-1));
+        view.findViewById(R.id.btnNextMonth).setOnClickListener(v -> shiftMonth(1));
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
+                fedQuery = s.toString().trim().toLowerCase();
+                renderFederation();
+            }
+            @Override public void afterTextChanged(Editable s) { }
+        });
 
         MaterialButtonToggleGroup toggle = view.findViewById(R.id.toggleGroup);
         toggle.check(R.id.btnResults);
@@ -77,6 +105,7 @@ public class TournamentsFragment extends Fragment {
             if (!isChecked) return;
             resultsMode = checkedId == R.id.btnResults;
             importBtn.setVisibility(resultsMode && staff ? View.VISIBLE : View.GONE);
+            fedControls.setVisibility(resultsMode ? View.GONE : View.VISIBLE);
             reload();
         });
         importBtn.setVisibility(staff ? View.VISIBLE : View.GONE);
@@ -114,7 +143,23 @@ public class TournamentsFragment extends Fragment {
 
     // ------------------------------------------------------------ federation
 
+    private void shiftMonth(int delta) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(fedYear, fedMonth - 1, 1);
+        cal.add(Calendar.MONTH, delta);
+        fedYear = cal.get(Calendar.YEAR);
+        fedMonth = cal.get(Calendar.MONTH) + 1;
+        loadFederation();
+    }
+
+    private void updateMonthLabel() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(fedYear, fedMonth - 1, 1);
+        txtMonth.setText(new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.getTime()));
+    }
+
     private void loadFederation() {
+        updateMonthLabel();
         loadingBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
         note.setVisibility(View.VISIBLE);
@@ -124,15 +169,14 @@ public class TournamentsFragment extends Fragment {
 
         if (!FederationApi.hasApiKey()) {
             loadingBar.setVisibility(View.GONE);
+            fedEligible.clear();
             recycler.setAdapter(null);
             emptyView.setText(R.string.fed_no_key);
             emptyView.setVisibility(View.VISIBLE);
             return;
         }
 
-        Calendar cal = Calendar.getInstance();
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH) + 1;
+        int year = fedYear, month = fedMonth;
         Async.io(() -> {
             List<FederationApi.FedTournament> all = FederationApi.listTournaments(year, month);
             List<FederationApi.FedTournament> eligible = new ArrayList<>();
@@ -142,11 +186,23 @@ public class TournamentsFragment extends Fragment {
             Async.main(() -> {
                 if (!isAdded()) return;
                 loadingBar.setVisibility(View.GONE);
-                recycler.setAdapter(new FedTournamentAdapter(eligible, this::openLink));
-                emptyView.setText(R.string.fed_none);
-                emptyView.setVisibility(eligible.isEmpty() ? View.VISIBLE : View.GONE);
+                fedEligible.clear();
+                fedEligible.addAll(eligible);
+                renderFederation();
             });
         });
+    }
+
+    /** Applies the name search over the eligible list and updates the UI. */
+    private void renderFederation() {
+        if (resultsMode) return;
+        List<FederationApi.FedTournament> shown = new ArrayList<>();
+        for (FederationApi.FedTournament t : fedEligible) {
+            if (fedQuery.isEmpty() || t.name.toLowerCase().contains(fedQuery)) shown.add(t);
+        }
+        recycler.setAdapter(new FedTournamentAdapter(shown, this::openLink));
+        emptyView.setText(fedEligible.isEmpty() ? R.string.fed_none : R.string.fed_no_match);
+        emptyView.setVisibility(shown.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void openLink(String link) {

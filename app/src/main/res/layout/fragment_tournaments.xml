@@ -61,6 +61,69 @@
             android:text="@string/tab_register" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    <!-- Federation-only controls: month browser + search by name -->
+    <LinearLayout
+        android:id="@+id/fedControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_marginTop="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrevMonth"
+                style="@style/Widget.PTChess.Button.Outlined"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="‹" />
+
+            <TextView
+                android:id="@+id/txtMonth"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNextMonth"
+                style="@style/Widget.PTChess.Button.Outlined"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="›" />
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.PTChess.TextInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:startIconDrawable="@drawable/ic_chevron"
+            android:hint="@string/search_tournament">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputFedSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLength="60"
+                android:imeOptions="actionSearch"
+                android:textColor="@color/text_primary" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
     <TextView
         android:id="@+id/txtNote"
         android:layout_width="match_parent"

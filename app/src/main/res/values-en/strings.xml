@@ -196,6 +196,8 @@
     <string name="fed_none">No tournaments match your rating right now.</string>
     <string name="fed_note_rating">Showing only tournaments you can enter at your rating (%1$d).</string>
     <string name="fed_note_no_rating">You have no rating on file — showing all tournaments.</string>
+    <string name="search_tournament">Search tournament by name</string>
+    <string name="fed_no_match">No tournaments match that name.</string>
 
     <string name="admin_title">Admin center</string>
     <string name="pending_approvals">Pending registrations</string>

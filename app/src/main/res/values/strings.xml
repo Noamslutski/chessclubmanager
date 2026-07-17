@@ -207,6 +207,8 @@
     <string name="fed_none">לא נמצאו טורנירים מתאימים לדירוג שלך.</string>
     <string name="fed_note_rating">מוצגים רק טורנירים שמתאימים לדירוג שלך (%1$d).</string>
     <string name="fed_note_no_rating">אין לך דירוג רשום — מוצגים כל הטורנירים.</string>
+    <string name="search_tournament">חיפוש טורניר לפי שם</string>
+    <string name="fed_no_match">לא נמצאו טורנירים בשם זה.</string>
 
     <!-- Admin -->
     <string name="admin_title">מרכז הניהול</string>
