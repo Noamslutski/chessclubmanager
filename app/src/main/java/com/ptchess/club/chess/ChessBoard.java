@@ -258,6 +258,69 @@ public class ChessBoard {
         if (castling.isEmpty()) castling = "-";
     }
 
+    // ---- check detection ----
+
+    private int[] findKing(boolean white) {
+        char king = white ? 'K' : 'k';
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                if (squares[r][c] == king) return new int[]{r, c};
+            }
+        }
+        return null;
+    }
+
+    /** True if (row,col) is attacked by any piece of the given colour. */
+    public boolean isSquareAttacked(int row, int col, boolean byWhite) {
+        int pawnRow = byWhite ? row + 1 : row - 1;
+        char pawn = byWhite ? 'P' : 'p';
+        if (inBounds(pawnRow, col - 1) && squares[pawnRow][col - 1] == pawn) return true;
+        if (inBounds(pawnRow, col + 1) && squares[pawnRow][col + 1] == pawn) return true;
+
+        char knight = byWhite ? 'N' : 'n';
+        for (int[] d : KNIGHT) {
+            int r = row + d[0], c = col + d[1];
+            if (inBounds(r, c) && squares[r][c] == knight) return true;
+        }
+        char king = byWhite ? 'K' : 'k';
+        for (int[] d : KING) {
+            int r = row + d[0], c = col + d[1];
+            if (inBounds(r, c) && squares[r][c] == king) return true;
+        }
+
+        char bishop = byWhite ? 'B' : 'b';
+        char rook = byWhite ? 'R' : 'r';
+        char queen = byWhite ? 'Q' : 'q';
+        for (int[] d : BISHOP) {
+            int r = row + d[0], c = col + d[1];
+            while (inBounds(r, c)) {
+                char p = squares[r][c];
+                if (p != '.') { if (p == bishop || p == queen) return true; break; }
+                r += d[0]; c += d[1];
+            }
+        }
+        for (int[] d : ROOK) {
+            int r = row + d[0], c = col + d[1];
+            while (inBounds(r, c)) {
+                char p = squares[r][c];
+                if (p != '.') { if (p == rook || p == queen) return true; break; }
+                r += d[0]; c += d[1];
+            }
+        }
+        return false;
+    }
+
+    public boolean isInCheck(boolean white) {
+        int[] k = findKing(white);
+        return k != null && isSquareAttacked(k[0], k[1], !white);
+    }
+
+    /** The square of the side-to-move king if it is in check, else null (for UI). */
+    public int[] checkedKingSquare() {
+        if (isInCheck(whiteToMove)) return findKing(whiteToMove);
+        return null;
+    }
+
     // ---- coordinate helpers ----
 
     public static String toUci(int fromRow, int fromCol, int toRow, int toCol) {

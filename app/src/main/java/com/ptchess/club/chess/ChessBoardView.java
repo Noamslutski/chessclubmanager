@@ -30,6 +30,7 @@ public class ChessBoardView extends View {
     private final Paint darkPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint selPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint lastPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint checkPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pieceShadow = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint whiteBody = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -55,6 +56,7 @@ public class ChessBoardView extends View {
         darkPaint.setColor(0xFF3D5A96);
         selPaint.setColor(0x88E7B04A);
         lastPaint.setColor(0x552B6EE0);
+        checkPaint.setColor(0x88E5566B);
         dotPaint.setColor(0x992B6EE0);
 
         // Pieces are drawn as a matched pair of glyphs: a solid body glyph plus
@@ -116,6 +118,8 @@ public class ChessBoardView extends View {
         float cell = getWidth() / 8f;
         coordPaint.setTextSize(cell * 0.22f);
 
+        int[] check = board.checkedKingSquare();
+
         for (int r = 0; r < 8; r++) {
             for (int col = 0; col < 8; col++) {
                 float x = col * cell, y = r * cell;
@@ -128,6 +132,9 @@ public class ChessBoardView extends View {
                 }
                 if (r == selRow && col == selCol) {
                     canvas.drawRect(x, y, x + cell, y + cell, selPaint);
+                }
+                if (check != null && r == check[0] && col == check[1]) {
+                    canvas.drawCircle(x + cell / 2f, y + cell / 2f, cell * 0.48f, checkPaint);
                 }
             }
         }
