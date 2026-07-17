@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 620" width="300" height="620" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#060910"/><stop offset="1" stop-color="#0C121D"/></linearGradient>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B4DA8"/><stop offset="1" stop-color="#0C121D"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3D08A"/><stop offset="1" stop-color="#E7B04A"/></linearGradient>
+  </defs>
+  <rect x="2" y="2" width="296" height="616" rx="40" fill="#05070c" stroke="#283656" stroke-width="2"/>
+  <rect x="12" y="14" width="276" height="592" rx="30" fill="url(#scr)"/>
+  <clipPath id="clip"><rect x="12" y="14" width="276" height="592" rx="30"/></clipPath>
+  <g clip-path="url(#clip)">
+    <rect x="12" y="14" width="276" height="120" fill="url(#hdr)"/>
+    <rect x="120" y="14" width="60" height="18" rx="9" fill="#05070c"/>
+    <text x="30" y="46" fill="#DCE6F5" font-size="12" font-weight="600">9:41</text>
+
+    <!-- logo + welcome -->
+    <circle cx="46" cy="86" r="22" fill="#141C2B" stroke="#2B6EE0" stroke-width="2"/>
+    <g transform="translate(30,72) scale(0.5)">
+      <path d="M56,26 h8 v8 h8 v8 h-8 v8 h-8 v-8 h-8 v-8 h8 z" fill="url(#gold)"/>
+      <circle cx="60" cy="52" r="7" fill="url(#gold)"/>
+      <path d="M48,62 C44,74 46,82 60,82 C74,82 76,74 72,62 C68,70 52,70 48,62 Z" fill="#F3D08A"/>
+      <path d="M44,86 h32 l-4,10 h-24 z" fill="url(#gold)"/>
+    </g>
+    <text x="80" y="82" fill="#F3F6FB" font-size="15" font-weight="700" direction="rtl">שלום, יונתן</text>
+    <rect x="80" y="92" width="52" height="20" rx="10" fill="#33E7B04A" stroke="#E7B04A"/><text x="106" y="106" fill="#F3D08A" font-size="10" text-anchor="middle" direction="rtl">חניך</text>
+
+    <text x="34" y="164" fill="#F3F6FB" font-size="15" font-weight="700" direction="rtl">חדשות המועדון</text>
+
+    <!-- news card 1 -->
+    <rect x="24" y="178" width="252" height="96" rx="16" fill="#141C2B" stroke="#283656"/>
+    <text x="260" y="204" fill="#F3F6FB" font-size="13" font-weight="700" text-anchor="end" direction="rtl">פתיחת שנת הפעילות</text>
+    <text x="260" y="226" fill="#A9B6CB" font-size="11" text-anchor="end" direction="rtl">ברוכים הבאים למועדון! האימונים</text>
+    <text x="260" y="242" fill="#A9B6CB" font-size="11" text-anchor="end" direction="rtl">מתחילים ביום ראשון הקרוב.</text>
+    <text x="260" y="264" fill="#6E7C93" font-size="10" text-anchor="end" direction="rtl">מנהל · 2026-07-15</text>
+
+    <!-- news card 2 -->
+    <rect x="24" y="284" width="252" height="86" rx="16" fill="#141C2B" stroke="#283656"/>
+    <text x="260" y="310" fill="#F3F6FB" font-size="13" font-weight="700" text-anchor="end" direction="rtl">טורניר פנימי</text>
+    <text x="260" y="332" fill="#A9B6CB" font-size="11" text-anchor="end" direction="rtl">טורניר הבזק יתקיים בסוף החודש.</text>
+    <text x="260" y="360" fill="#6E7C93" font-size="10" text-anchor="end" direction="rtl">מנהל · 2026-07-15</text>
+
+    <!-- assignment popup hint -->
+    <rect x="24" y="384" width="252" height="60" rx="16" fill="#101a2c" stroke="#2B6EE0"/>
+    <text x="260" y="410" fill="#5B9DF9" font-size="12" font-weight="700" text-anchor="end" direction="rtl">🔔 מטלה חדשה ממתינה לך!</text>
+    <text x="260" y="430" fill="#A9B6CB" font-size="10" text-anchor="end" direction="rtl">תרגילי מט בשניים · להגשה 25.07</text>
+  </g>
+
+  <rect x="12" y="566" width="276" height="40" fill="#05070c"/>
+  <text x="44" y="590" font-size="13" text-anchor="middle" fill="#5B9DF9">🏠</text><text x="44" y="601" font-size="7" text-anchor="middle" fill="#5B9DF9">Home</text>
+  <text x="96" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">▶</text><text x="96" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">Watch</text>
+  <text x="150" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">♞</text><text x="150" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">Puz</text>
+  <text x="204" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">📖</text><text x="204" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">Lib</text>
+  <text x="256" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">⋯</text><text x="256" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">More</text>
+</svg>

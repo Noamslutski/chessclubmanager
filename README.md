@@ -1,193 +1,161 @@
-# מועדון השחמט פתח תקווה — Petach Tikva Chess Club (Android)
+<p align="center">
+  <img src="docs/img/banner.svg" alt="Petach Tikva Chess Club" width="100%">
+</p>
 
-An Android app (Java) for the Petach Tikva Chess Club. Blue‑and‑black theme with a
-warm gold accent, **Hebrew by default** with a one‑tap switch to English (full RTL/LTR),
-role‑based access for four user levels, an interactive puzzle board, a club library,
-homework/assignments, tournament results, and an admin center.
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
+  <img src="https://img.shields.io/badge/language-Java-E76F00?logo=openjdk&logoColor=white">
+  <img src="https://img.shields.io/badge/minSdk-26-2B6EE0">
+  <img src="https://img.shields.io/badge/UI-Material%203-5B9DF9">
+  <img src="https://img.shields.io/badge/i18n-עברית%20%2B%20English-E7B04A">
+  <img src="https://img.shields.io/badge/DB-SQLite-003B57?logo=sqlite&logoColor=white">
+</p>
 
-> **Status: working foundation.** This project compiles and runs today against a
-> local, seeded database so every screen is usable immediately. A few requirements
-> are inherently multi‑device (emailing the admin on registration, password‑reset
-> emails, real cross‑phone sync). Those need a backend — the app is structured so it
-> can be added without reworking the UI. See **[What needs a backend](#what-needs-a-backend)**.
+<p align="center">
+  <b>מועדון השחמט פתח תקווה</b> — a modern, multi-club Android app for chess clubs:<br>
+  role-based access, an interactive puzzle trainer wired to <b>Lichess</b>, live <b>OTB broadcasts</b>,
+  rating-filtered federation tournaments, a club library, homework, and an admin center.<br>
+  Hebrew by default (full RTL) with a one-tap switch to English.
+</p>
 
 ---
 
-## Open & run
+## 📱 Screens
 
-1. Open the project folder in **Android Studio** (Giraffe/Koala or newer). Let it sync
-   Gradle — Android Studio will generate the Gradle wrapper if it is missing.
-2. Pick an emulator or device (**Android 8.0 / API 26+**) and press **Run**.
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/img/mock_login.svg" width="220"><br><sub><b>Secure login</b></sub></td>
+    <td align="center"><img src="docs/img/mock_home.svg" width="220"><br><sub><b>Home &amp; news</b></sub></td>
+    <td align="center"><img src="docs/img/mock_puzzles.svg" width="220"><br><sub><b>Puzzles (Lichess)</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/img/mock_watch.svg" width="220"><br><sub><b>Watch — OTB broadcasts</b></sub></td>
+    <td align="center"><img src="docs/img/mock_tournaments.svg" width="220"><br><sub><b>Tournaments by rating</b></sub></td>
+    <td align="center"><img src="docs/img/mock_club.svg" width="220"><br><sub><b>Club profile</b></sub></td>
+  </tr>
+</table>
 
-Command line (once the SDK is configured and a `local.properties` with `sdk.dir` exists):
+> The images above are design mockups rendered in the app's real theme. Build the project in
+> Android Studio to run it on a device/emulator.
+
+---
+
+## ✨ Features
+
+### ♟ Chess trainer
+- Interactive board (tap-to-move) with **legal-move dots**, last-move and **king-in-check** highlights.
+- Puzzles load **live from the Lichess API** and are grouped by **difficulty levels** (filter chips).
+- Staff can also import puzzles from a **PGN file** or add one manually (validated by the engine).
+
+### 📺 Watch — live OTB broadcasts
+- Streams official **Lichess Broadcasts** (relays of over-the-board events).
+- Pick a tournament → round → **game**, then follow it live with **move navigation**, **player titles + Elo**,
+  **clocks**, a highlighted **move list**, **captured material**, and a 6-second **auto-refresh**.
+- For now, only **elite games (both players 2400+)** are shown.
+
+### 🏆 Tournaments
+- **My results** (imported by staff from a CSV) and **Register** — real **federation tournaments** for the
+  current month, showing **only the ones the player is eligible for by rating** (ineligible ones are hidden),
+  with date, location, time control, rating requirement, organizer, places and a registration link.
+
+### 👥 Clubs (multi-tenant)
+- On registration you **join an existing club** or **create your own** and become its admin/owner.
+- Every club has a **profile**: logo, banner, about, address, playing hall, contact, and a **weekly schedule**
+  generated from its real groups.
+- A public **staff directory** (coaches, tutors, admins) everyone can browse.
+
+### 🎓 Roles &amp; people
+- Four roles — **Admin · Tutor · Parent · Student** — with role-based navigation and data access.
+- **Semi-automatic approval**: a student whose name matches an imported club-roster player is approved
+  automatically and adopts that player's rating.
+- Parents link children (verified by the child's own credentials), see their info, and contact staff by phone/WhatsApp.
+- Library (categorized PDFs), homework/assignments with attachments and a home-screen reminder, club news.
+
+### 🔐 Security
+- Salted **PBKDF2-HMAC-SHA256** password hashing (constant-time compare).
+- **Parameterized SQL everywhere** — injection is structurally impossible.
+- **Brute-force lockout** (escalating), **encrypted session** (Android Keystore), input validation,
+  cleartext-HTTP blocked, R8 hardening, no email enumeration.
+
+---
+
+## 🚀 Getting started
+
+1. Open the project in **Android Studio** (Giraffe or newer) and let Gradle sync.
+2. Run on a device/emulator with **Android 8.0 (API 26)** or newer.
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-## Demo accounts (⚠️ change before publishing)
+### Demo accounts (change before publishing)
 
-Seeded on first launch (`DbHelper.seed`). Passwords are stored **hashed** (PBKDF2).
+| Role            | Email                   | Password      |
+|-----------------|-------------------------|---------------|
+| **Super admin** | `noamslutski@gmail.com` | `Noam#2026`   |
+| Club admin      | `admin@ptchess.co.il`   | `Admin#2026`  |
+| Tutor           | `tutor@ptchess.co.il`   | `Tutor#2026`  |
+| Student         | `child@ptchess.co.il`   | `Child#2026`  |
+| Parent          | `parent@ptchess.co.il`  | `Parent#2026` |
 
-| Role                | Email                   | Password      |
-|---------------------|-------------------------|---------------|
-| **Super admin**     | `noamslutski@gmail.com` | `Noam#2026`   |
-| Club admin          | `admin@ptchess.co.il`   | `Admin#2026`  |
-| Tutor               | `tutor@ptchess.co.il`   | `Tutor#2026`  |
-| Student             | `child@ptchess.co.il`   | `Child#2026`  |
-| Parent              | `parent@ptchess.co.il`  | `Parent#2026` |
+The app ships with **no placeholder content** — the club, accounts and groups are the working skeleton;
+puzzles come from Lichess and everything else (news, library, tournaments, roster) is filled by real use.
 
-The **super admin** (`noamslutski@gmail.com`) owns the seeded, verified "Petach
-Tikva" club and can **verify other clubs** (More → Verify clubs), which unlocks
-player import for those clubs' admins.
+### API keys
 
-There is also a **pending** registration (`pending@ptchess.co.il`) so the admin
-approvals screen is not empty. Replace the seeded admin with your real credentials
-before shipping.
+Lichess endpoints need no key. The federation **players** and **tournaments** features use the parse.bot API,
+whose key is read at build time from any of:
 
-## Roles & permissions (4 levels)
-
-- **Student (חניך)** — base level on registration. Sees their groups, chess puzzles,
-  their own tournament results, assignments, and the library.
-- **Tutor (מאמן)** — sees/manages only their own groups, uploads puzzles (PGN) and
-  library books, posts assignments, sees their students' results.
-- **Parent (הורה)** — sees everything their linked children see, can add more children,
-  and can contact the tutor/admin by phone or WhatsApp.
-- **Admin (מנהל)** — full access: approves/rejects registrations, promotes users to any
-  role, posts club news, and manages all content.
-
-Registration creates a **Student pending admin approval**. If the new user supplies a
-valid child's email+password during registration, they are linked and granted the
-**Parent** role automatically (identity verified by the child's own credentials).
-
-## Security
-
-- **Password hashing:** salted **PBKDF2‑HMAC‑SHA256**, 120k iterations, constant‑time
-  compare (`security/PasswordHasher.java`). No plaintext passwords anywhere.
-- **SQL‑injection safe:** every query in `data/ClubRepository.java` uses `?` placeholders
-  with bound arguments — no user input is ever concatenated into SQL.
-- **Brute‑force lockout:** repeated failed logins for an email trigger an escalating
-  temporary lock (5 → 10 → 20 → 40 → 60 min).
-- **Encrypted session:** the logged‑in user id is kept in `EncryptedSharedPreferences`
-  (AES‑256, key in the Android Keystore).
-- **Input validation/sanitization:** email/password/name checks, length caps, control‑char
-  stripping (`security/InputValidator.java`).
-- **Transport & backup:** cleartext HTTP is blocked (`network_security_config.xml`); the
-  credential DB and session prefs are excluded from cloud/device backups.
-- **Release hardening:** R8/ProGuard shrinking + obfuscation, log stripping.
-- Neutral “reset link sent” / “wrong credentials” messages avoid leaking which emails exist.
-
-## Chess puzzles
-
-- Custom `chess/ChessBoardView` renders an interactive board; tap a piece to see legal
-  targets, tap a target to move. Solved by matching the stored solution line.
-- `chess/ChessBoard` parses FEN and applies UCI moves (incl. castling, promotion,
-  en passant) and generates pseudo‑legal moves.
-- **Upload puzzles** (tutor/admin): the button on the Puzzles screen offers two paths:
-  - **Import PGN** — reads a `.pgn` file and converts each game's main line to a puzzle
-    (`chess/PgnImporter`). Puzzles exported from Lichess/ChessBase import this way.
-  - **Add manually** — enter a FEN + UCI solution; the move is validated against the
-    engine before it is saved.
-
-## Library
-
-Everyone can browse. Tutors/admins add a book with **category** (opening/attack/defense/
-endgame/psychology/strategy/tactics), **side** (white/black/both), **rating range**,
-**language**, and a **PDF** (via the system file picker). Each book has **Open** and
-**Print** actions.
-
-## Assignments & tournaments
-
-- **Assignments/homework** — tutors/admins post a task to a group with an optional
-  PDF/PGN/text attachment. Students mark items done; students and parents get a
-  home‑screen popup while any work is outstanding.
-- **Tournament results** — tutors/admins **Import results** from a CSV export (like a
-  chess‑results download). Expected columns:
-  `child_email, tournament, date, points, games, standing` (a header row is skipped
-  automatically). Rows are scoped so a student sees only their own results, a parent
-  their children's, a tutor their students', and an admin everything.
-
-## Clubs (multi-tenant)
-
-Each user belongs to one club; groups, puzzles, books, news, assignments and
-tournaments are all scoped by club. On registration you either **join an existing
-club** (as a student pending approval) or **create a new club** (becoming its
-active admin/owner). Parents inherit their child's club automatically. Admins can
-create groups, add students, promote users to Tutor/Admin, and post content — all
-within their own club.
-
-## Watch (Lichess TV)
-
-The **Watch** tab streams the current featured Lichess TV game live (the Lichess
-"DGT board"), rendering each move on a read-only board with the players' names.
-Uses the public `GET /api/tv/feed` NDJSON stream; the connection is closed when
-you leave the screen.
-
-## Player import (verified club owners)
-
-Verified-club admins get **More → Players**: search the federation players
-database and add players to the club roster (deduped per club). The search calls
-the parse.bot scraper API. The API key is read from `BuildConfig.PARSE_API_KEY`,
-supplied at build time from a Gradle property and **never committed**:
-
-```
-# in ~/.gradle/gradle.properties (NOT the project file)
-parseApiKey=your-parse-bot-key
+```bash
+# one of these — never committed to the repo
+./gradlew assembleDebug -PparseApiKey=YOUR_KEY
+# or parseApiKey=YOUR_KEY in ~/.gradle/gradle.properties
+# or an environment variable:
+export PARSE_API_KEY=YOUR_KEY
 ```
 
-> **Backend required for the full spec.** "No duplicates across different owners"
-> and "the app admin approves each request" are shared, server-side workflows —
-> different owners on different devices can't dedup against each other or wait on
-> one person's approval without a backend. The client does per-club dedup and
-> local super-admin verification only, and a shipped app should proxy the
-> parse.bot call through the club server rather than embed any API key.
+It is exposed to code as `BuildConfig.PARSE_API_KEY`. A production build should proxy these calls through a backend.
 
-## chess-results tournaments
+---
 
-Import a tournament's final ranking by exporting it from chess-results.com to
-Excel, saving as CSV, and using **Tournaments → Import results**. Expected columns:
-`child_email, tournament, date, points, games, standing`.
+## 🌐 APIs &amp; services
 
-## Localization
+| Service | Used for | Key |
+|---|---|---|
+| **Lichess Puzzle API** (`/api/puzzle/*`) | puzzle pool by difficulty | none |
+| **Lichess Broadcast API** (`/api/broadcast`, round PGN) | live OTB games | none |
+| **parse.bot `search_players`** | club roster import | `PARSE_API_KEY` |
+| **parse.bot `list_tournaments`** | federation tournaments | `PARSE_API_KEY` |
 
-Hebrew is the default (`res/values`), English is in `res/values-en`. Change it any time
-in **Settings**; the app re‑applies the locale and layout direction. Weekday names come
-from a localized `string-array`.
+---
 
-## Replace the placeholder logo
-
-No logo image was attached, so a vector placeholder ships in
-`res/drawable/logo_emblem.xml` (a gold chess king on a blue shield), reused for the
-launcher icon. To use your real logo:
-
-- **Simplest:** drop `logo_emblem.png` into `res/drawable/` (overriding the vector), or
-- Replace `logo_emblem.xml` with your vector, and regenerate launcher icons via
-  **Android Studio → New → Image Asset**.
-
-## What needs a backend
-
-These parts are stubbed locally and marked in code; wire them to a server (a REST API,
-or Firebase Auth + Firestore + Storage + Cloud Functions, map cleanly onto
-`ClubRepository`):
-
-1. **Email to admin on new registration** and **password‑reset emails**
-   (`requestPasswordReset` is a safe stub today).
-2. **True multi‑device data** — the local SQLite store is per‑device; a backend makes
-   groups/puzzles/results/library shared across users.
-3. **Assignment push notifications** — students/parents get the assignment in‑app now;
-   real push needs FCM.
-4. **Server‑side rate limiting** to complement the on‑device brute‑force lock.
-5. **In‑app PDF print rendering** — currently hands off to a PDF viewer/print service.
-
-## Project layout
+## 🧱 Architecture
 
 ```
 app/src/main/java/com/ptchess/club/
-  ChessApp.java                 Application (locale + DB warm‑up)
-  chess/                        ChessBoard, ChessBoardView, PgnImporter
+  ChessApp.java                 Application (locale + DB warm-up)
+  chess/                        ChessBoard (FEN, moves, checks), ChessBoardView, PgnImporter
   data/                         DbHelper (schema+seed), ClubRepository, model/
+  data/remote/                  LichessApi, LichessBroadcast, ParseBotApi, FederationApi
   security/                     PasswordHasher, InputValidator, SessionManager
   ui/                           auth/ admin/ tutor/ parent/ child/ common/
   util/                         LocaleHelper, Async, UiUtils
-app/src/main/res/               themes, colors, strings (he + en), drawables, layouts
 ```
+
+- **Java + SQLite + Material 3**, no Kotlin.
+- Single parameterized `ClubRepository`; all content is **club-scoped** (`club_id`).
+- The chess engine is covered by pure-Java unit tests (puzzle legality, PGN→UCI, FEN round-trip,
+  broadcast parsing, check detection).
+
+---
+
+## 🛣 Roadmap &amp; limitations (need a backend)
+
+The following are intentionally **not faked** and require a backend/data pipeline to be real:
+emailing the admin on registration and password-reset emails, true cross-device sync, push notifications,
+cross-owner roster de-duplication + the super-admin approval queue, and analytics/attendance/gamification
+dashboards. The parse.bot key must be proxied server-side in production rather than shipped in the APK.
+
+---
+
+<p align="center"><sub>Built with ♟ for מועדון השחמט פתח תקווה.</sub></p>

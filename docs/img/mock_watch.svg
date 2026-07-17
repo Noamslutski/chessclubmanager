@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 620" width="300" height="620" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs><linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#060910"/><stop offset="0.6" stop-color="#0C121D"/><stop offset="1" stop-color="#101a2c"/></linearGradient></defs>
+  <rect x="2" y="2" width="296" height="616" rx="40" fill="#05070c" stroke="#283656" stroke-width="2"/>
+  <rect x="12" y="14" width="276" height="592" rx="30" fill="url(#scr)"/>
+  <rect x="120" y="14" width="60" height="18" rx="9" fill="#05070c"/>
+  <text x="30" y="46" fill="#A9B6CB" font-size="12" font-weight="600">9:41</text>
+  <text x="270" y="46" fill="#A9B6CB" font-size="12" text-anchor="end">▮ ▮ ▮</text>
+  <text x="34" y="70" fill="#F3F6FB" font-size="14" font-weight="700">שידור חי (OTB)</text>
+  <rect x="214" y="58" width="54" height="20" rx="10" fill="#33E7B04A" stroke="#E7B04A"/><text x="241" y="72" fill="#E5566B" font-size="10" font-weight="700" text-anchor="middle">● LIVE</text>
+  <text x="34" y="98" fill="#F3F6FB" font-size="12" font-weight="700">♚ GM Levi, Noa (2410)</text>
+  <rect x="214" y="86" width="54" height="20" rx="8" fill="#141C2B" stroke="#283656"/><text x="241" y="100" fill="#F3F6FB" font-size="11" text-anchor="middle">1:24:31</text>
+<rect x="34.0" y="112.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="63.0" y="112.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="92.0" y="112.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="121.0" y="112.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="150.0" y="112.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="179.0" y="112.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="208.0" y="112.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="237.0" y="112.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="34.0" y="141.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="63.0" y="141.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="92.0" y="141.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="121.0" y="141.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="150.0" y="141.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="179.0" y="141.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="208.0" y="141.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="237.0" y="141.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="34.0" y="170.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="63.0" y="170.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="92.0" y="170.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="121.0" y="170.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="150.0" y="170.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="179.0" y="170.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="208.0" y="170.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="237.0" y="170.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="34.0" y="199.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="63.0" y="199.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="92.0" y="199.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="92.0" y="199.0" width="29.0" height="29.0" fill="#2B6EE0" opacity="0.33"/>
+<rect x="121.0" y="199.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="150.0" y="199.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="179.0" y="199.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="208.0" y="199.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="237.0" y="199.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="34.0" y="228.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="63.0" y="228.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="92.0" y="228.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="92.0" y="228.0" width="29.0" height="29.0" fill="#2B6EE0" opacity="0.33"/>
+<rect x="121.0" y="228.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="150.0" y="228.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="179.0" y="228.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="208.0" y="228.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="237.0" y="228.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="34.0" y="257.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="63.0" y="257.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="92.0" y="257.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="121.0" y="257.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="150.0" y="257.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="179.0" y="257.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="208.0" y="257.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="237.0" y="257.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="34.0" y="286.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="63.0" y="286.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="92.0" y="286.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="121.0" y="286.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="150.0" y="286.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="179.0" y="286.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="208.0" y="286.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="237.0" y="286.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="34.0" y="315.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="63.0" y="315.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="92.0" y="315.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="121.0" y="315.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="150.0" y="315.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="179.0" y="315.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<rect x="208.0" y="315.0" width="29.0" height="29.0" fill="#3D5A96"/>
+<rect x="237.0" y="315.0" width="29.0" height="29.0" fill="#E9EDF4"/>
+<text x="48.5" y="134.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♜</text>
+<text x="106.5" y="134.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♝</text>
+<text x="135.5" y="134.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♛</text>
+<text x="193.5" y="134.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♜</text>
+<text x="222.5" y="134.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♚</text>
+<text x="48.5" y="163.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="77.5" y="163.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="106.5" y="163.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="193.5" y="163.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="222.5" y="163.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="251.5" y="163.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="106.5" y="192.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♞</text>
+<text x="135.5" y="192.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="193.5" y="192.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♞</text>
+<text x="106.5" y="221.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♝</text>
+<text x="164.5" y="221.6" font-size="23.8" text-anchor="middle" fill="#16243E" stroke="#DCE6F5" stroke-width="0.4">♟</text>
+<text x="106.5" y="250.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♝</text>
+<text x="164.5" y="250.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="106.5" y="279.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♞</text>
+<text x="135.5" y="279.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="193.5" y="279.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♞</text>
+<text x="48.5" y="308.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="77.5" y="308.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="106.5" y="308.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="193.5" y="308.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="222.5" y="308.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="251.5" y="308.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♟</text>
+<text x="48.5" y="337.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♜</text>
+<text x="106.5" y="337.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♝</text>
+<text x="135.5" y="337.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♛</text>
+<text x="193.5" y="337.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♜</text>
+<text x="222.5" y="337.6" font-size="23.8" text-anchor="middle" fill="#F7FAFF" stroke="#0C121D" stroke-width="0.6">♚</text>
+  <text x="34" y="366" fill="#F3F6FB" font-size="12" font-weight="700">♔ IM Cohen, Daniel (2465)</text>
+  <rect x="214" y="354" width="54" height="20" rx="8" fill="#33E7B04A" stroke="#E7B04A"/><text x="241" y="368" fill="#F3D08A" font-size="11" text-anchor="middle">1:19:02</text>
+  <text x="150" y="392" fill="#A9B6CB" font-size="11" text-anchor="middle">מהלך 12 מתוך 24</text>
+  <text x="150" y="410" fill="#F3D08A" font-size="13" text-anchor="middle">חומר שווה</text>
+  <rect x="34" y="422" width="52" height="30" rx="11" fill="none" stroke="#283656"/><text x="60" y="442" fill="#5B9DF9" font-size="13" text-anchor="middle">◀</text>
+  <rect x="92" y="422" width="52" height="30" rx="11" fill="none" stroke="#283656"/><text x="118" y="442" fill="#5B9DF9" font-size="13" text-anchor="middle">▶</text>
+  <rect x="150" y="422" width="116" height="30" rx="11" fill="#E7B04A"/><text x="208" y="442" fill="#0C121D" font-size="12" font-weight="700" text-anchor="middle">חי</text>
+  <rect x="34" y="460" width="232" height="40" rx="12" fill="#141C2B" stroke="#283656"/>
+  <text x="44" y="484" fill="#A9B6CB" font-size="11">1. e4 e5 2. Nf3 Nc6 3. </text><text x="196" y="484" fill="#E7B04A" font-size="11" font-weight="700">Bc4</text>
+<rect x="12" y="566" width="276" height="40" fill="#05070c"/>
+<text x="44" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">🏠</text>
+<text x="44" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">Home</text>
+<text x="96" y="590" font-size="13" text-anchor="middle" fill="#5B9DF9">▶</text>
+<text x="96" y="601" font-size="7" text-anchor="middle" fill="#5B9DF9">Watch</text>
+<text x="150" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">♞</text>
+<text x="150" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">Puz</text>
+<text x="204" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">📖</text>
+<text x="204" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">Lib</text>
+<text x="256" y="590" font-size="13" text-anchor="middle" fill="#6E7C93">⋯</text>
+<text x="256" y="601" font-size="7" text-anchor="middle" fill="#6E7C93">More</text>
+</svg>

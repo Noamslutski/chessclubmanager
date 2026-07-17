@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#060910"/>
+      <stop offset="0.55" stop-color="#0C121D"/>
+      <stop offset="1" stop-color="#132a52"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3D08A"/>
+      <stop offset="1" stop-color="#E7B04A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.18" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2B6EE0" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2B6EE0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="340" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="340" rx="24" fill="url(#glow)"/>
+
+  <!-- faint board squares, top-right -->
+  <g opacity="0.10">
+    <g fill="#5B9DF9">
+      <rect x="880" y="0" width="40" height="40"/><rect x="960" y="0" width="40" height="40"/><rect x="1040" y="0" width="40" height="40"/><rect x="1120" y="0" width="40" height="40"/>
+      <rect x="920" y="40" width="40" height="40"/><rect x="1000" y="40" width="40" height="40"/><rect x="1080" y="40" width="40" height="40"/><rect x="1160" y="40" width="40" height="40"/>
+      <rect x="880" y="80" width="40" height="40"/><rect x="960" y="80" width="40" height="40"/><rect x="1040" y="80" width="40" height="40"/><rect x="1120" y="80" width="40" height="40"/>
+    </g>
+  </g>
+
+  <!-- emblem -->
+  <g transform="translate(90,80)">
+    <circle cx="90" cy="90" r="86" fill="#141C2B" stroke="#2B6EE0" stroke-width="3"/>
+    <circle cx="90" cy="90" r="66" fill="none" stroke="#1B4DA8" stroke-width="2"/>
+    <g transform="translate(30,26) scale(1.0)">
+      <path d="M56,26 h8 v8 h8 v8 h-8 v8 h-8 v-8 h-8 v-8 h8 z" fill="url(#gold)"/>
+      <circle cx="60" cy="52" r="7" fill="url(#gold)"/>
+      <path d="M48,62 C44,74 46,82 60,82 C74,82 76,74 72,62 C68,70 52,70 48,62 Z" fill="#F3D08A"/>
+      <path d="M44,86 h32 l-4,10 h-24 z" fill="url(#gold)"/>
+      <path d="M46,82 h28 v5 h-28 z" fill="#F3D08A"/>
+    </g>
+  </g>
+
+  <!-- text -->
+  <text x="320" y="130" fill="#F3F6FB" font-size="52" font-weight="700">Petach Tikva Chess Club</text>
+  <text x="320" y="182" fill="#F3D08A" font-size="34" font-weight="600" direction="rtl">מועדון השחמט פתח תקווה</text>
+  <text x="320" y="230" fill="#A9B6CB" font-size="22">A modern, multi-club Android app — puzzles · live OTB broadcasts · tournaments</text>
+
+  <g transform="translate(320,262)" font-size="15" fill="#CBD6E6">
+    <rect x="0" y="0" width="118" height="30" rx="15" fill="#141C2B" stroke="#283656"/>
+    <text x="59" y="20" text-anchor="middle">Java · SQLite</text>
+    <rect x="130" y="0" width="150" height="30" rx="15" fill="#141C2B" stroke="#283656"/>
+    <text x="205" y="20" text-anchor="middle">Material Design 3</text>
+    <rect x="292" y="0" width="150" height="30" rx="15" fill="#141C2B" stroke="#283656"/>
+    <text x="367" y="20" text-anchor="middle">Hebrew + English</text>
+  </g>
+</svg>
