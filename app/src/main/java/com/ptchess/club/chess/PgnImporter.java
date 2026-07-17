@@ -74,6 +74,87 @@ public final class PgnImporter {
         return new ParsedPuzzle(title, fen, uci);
     }
 
+    /** A parsed game with player info, clocks and a UCI move list (for the Watch viewer). */
+    public static class GameRecord {
+        public String white = "?";
+        public String black = "?";
+        public String whiteElo = "";
+        public String blackElo = "";
+        public String whiteTitle = "";
+        public String blackTitle = "";
+        public String result = "*";
+        public String board = "";      // e.g. "1" — the table number
+        public String fen = START_FEN;
+        public String whiteClock = "";
+        public String blackClock = "";
+        public final List<String> movesUci = new ArrayList<>();
+        public final List<String> movesSan = new ArrayList<>();
+    }
+
+    private static final Pattern CLK =
+            Pattern.compile("%clk\\s+(\\d+:\\d+:\\d+|\\d+:\\d+)");
+
+    /** Parses a multi-game PGN (e.g. a broadcast round) into full game records. */
+    public static List<GameRecord> parseGames(String pgnText) {
+        List<GameRecord> out = new ArrayList<>();
+        if (pgnText == null || pgnText.trim().isEmpty()) return out;
+        for (String game : pgnText.trim().split("(?=\\[Event )")) {
+            GameRecord g = parseGameRecord(game);
+            if (g != null) out.add(g);
+        }
+        return out;
+    }
+
+    private static GameRecord parseGameRecord(String game) {
+        GameRecord g = new GameRecord();
+        StringBuilder movetext = new StringBuilder();
+        boolean sawTag = false;
+
+        for (String line : game.split("\\r?\\n")) {
+            String t = line.trim();
+            if (t.startsWith("[")) {
+                Matcher m = TAG.matcher(t);
+                if (m.find()) {
+                    sawTag = true;
+                    String k = m.group(1), val = m.group(2);
+                    if ("White".equalsIgnoreCase(k)) g.white = val;
+                    else if ("Black".equalsIgnoreCase(k)) g.black = val;
+                    else if ("WhiteElo".equalsIgnoreCase(k)) g.whiteElo = val;
+                    else if ("BlackElo".equalsIgnoreCase(k)) g.blackElo = val;
+                    else if ("WhiteTitle".equalsIgnoreCase(k)) g.whiteTitle = val;
+                    else if ("BlackTitle".equalsIgnoreCase(k)) g.blackTitle = val;
+                    else if ("Result".equalsIgnoreCase(k)) g.result = val;
+                    else if ("Board".equalsIgnoreCase(k)) g.board = val;
+                    else if ("FEN".equalsIgnoreCase(k)) g.fen = val;
+                }
+            } else if (!t.isEmpty()) {
+                movetext.append(t).append(' ');
+            }
+        }
+        if (!sawTag && movetext.length() == 0) return null;
+
+        // Clocks are aligned to plies (white = even index, black = odd).
+        List<String> clocks = new ArrayList<>();
+        Matcher cm = CLK.matcher(movetext);
+        while (cm.find()) clocks.add(cm.group(1));
+        for (int i = clocks.size() - 1; i >= 0; i--) {
+            if (i % 2 == 0 && g.whiteClock.isEmpty()) g.whiteClock = clocks.get(i);
+            if (i % 2 == 1 && g.blackClock.isEmpty()) g.blackClock = clocks.get(i);
+        }
+
+        List<String> sans = tokenizeMoves(movetext.toString());
+        ChessBoard b = ChessBoard.fromFen(g.fen);
+        for (String san : sans) {
+            if (g.movesUci.size() >= 300) break;
+            String uci = sanToUci(b, san);
+            if (uci == null) break;
+            g.movesUci.add(uci);
+            g.movesSan.add(san);
+            b.applyUci(uci);
+        }
+        return g;
+    }
+
     private static List<String> tokenizeMoves(String movetext) {
         // Remove comments {...}, variations (...), NAGs $n and result markers.
         String cleaned = movetext

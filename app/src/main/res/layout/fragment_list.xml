@@ -59,5 +59,13 @@
             android:textColor="@color/text_muted"
             android:textSize="15sp"
             android:text="@string/no_groups" />
+
+        <ProgressBar
+            android:id="@+id/loadingBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:indeterminateTint="@color/blue_light" />
     </FrameLayout>
 </LinearLayout>

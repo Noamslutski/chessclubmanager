@@ -80,6 +80,14 @@
     <string name="watch_title">Live game from Lichess TV</string>
     <string name="watch_connecting">Connecting to the live broadcast…</string>
     <string name="watch_failed">Could not connect to the broadcast. Check your internet.</string>
+    <string name="watch_broadcasts">Live broadcasts (OTB)</string>
+    <string name="watch_no_broadcasts">No broadcasts available right now.</string>
+    <string name="watch_select_game">Choose a game to watch</string>
+    <string name="watch_no_games">No games in this round yet.</string>
+    <string name="watch_live">Live</string>
+    <string name="viewer_move">Move %1$d of %2$d</string>
+    <string name="viewer_start_position">Starting position</string>
+    <string name="board_number">Board %1$s</string>
 
     <string name="home_welcome">Hello, %1$s</string>
     <string name="home_news">Club news</string>
