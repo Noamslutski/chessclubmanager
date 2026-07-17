@@ -3,7 +3,6 @@ package com.ptchess.club.security;
 import android.util.Base64;
 
 import java.security.SecureRandom;
-import java.security.spec.KeySpec;
 import java.util.Arrays;
 
 import javax.crypto.SecretKeyFactory;
@@ -57,7 +56,7 @@ public final class PasswordHasher {
     }
 
     private static byte[] pbkdf2(char[] password, byte[] salt, int iterations) throws Exception {
-        KeySpec spec = new PBEKeySpec(password, salt, iterations, KEY_BITS);
+        PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, KEY_BITS);
         SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGO);
         try {
             return factory.generateSecret(spec).getEncoded();

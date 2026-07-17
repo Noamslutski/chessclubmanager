@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1007418548628",
+    "firebase_url": "https://chessclubmanager-4dc39-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "chessclubmanager-4dc39",
+    "storage_bucket": "chessclubmanager-4dc39.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007418548628:android:f5119163cad3b2a97f6f81",
+        "android_client_info": {
+          "package_name": "com.ptchess.club"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA01QOKHaAbn_MOU0a_HfmOkjUj_DdosHE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
