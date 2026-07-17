@@ -21,7 +21,7 @@ import com.ptchess.club.security.PasswordHasher;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "ptchess.db";
-    private static final int DB_VERSION = 4;
+    private static final int DB_VERSION = 5;
 
     /** The main app admin: extra powers (verify clubs) are keyed to this email. */
     public static final String SUPER_ADMIN_EMAIL = "noamslutski@gmail.com";
@@ -253,53 +253,9 @@ public class DbHelper extends SQLiteOpenHelper {
         addMember(db, gA, child2);
         addMember(db, gB, child1);
 
-        insertPuzzle(db, club, "מט בתור אחד - שורה אחורית", 1,
-                "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8", admin);
-        insertPuzzle(db, club, "מזלג פרש", 1,
-                "r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1", "d5c7", admin);
-        insertPuzzle(db, club, "רגלי זוכה מלכה", 2,
-                "8/8/8/3q4/4P3/8/8/4K1k1 w - - 0 1", "e4d5", tutor);
-        insertPuzzle(db, club, "מט המלכה", 2,
-                "7k/8/6KQ/8/8/8/8/8 w - - 0 1", "h6h7", tutor);
-        insertPuzzle(db, club, "מט חנוק", 3,
-                "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1", "g5f7", admin);
-        insertPuzzle(db, club, "זכייה בצריח", 3,
-                "3r2k1/5ppp/8/8/8/8/8/3QK3 w - - 0 1", "d1d8", tutor);
-
-        insertBook(db, club, "אמנות הקומבינציה", "מקסים בלוך", "עברית",
-                "tactics", "BOTH", 1200, 1800, admin);
-        insertBook(db, club, "My System", "Aron Nimzowitsch", "English",
-                "strategy", "BOTH", 1600, 2200, admin);
-        insertBook(db, club, "התקפה על המלך", "יעקב נוידיטש", "עברית",
-                "attack", "WHITE", 1400, 2000, tutor);
-
-        insertNews(db, club, "פתיחת שנת הפעילות", "ברוכים הבאים למועדון השחמט פתח תקווה! "
-                + "האימונים מתחילים ביום ראשון הקרוב.", admin);
-        insertNews(db, club, "טורניר פנימי", "טורניר הבזק הפנימי יתקיים בסוף החודש. "
-                + "הרשמה אצל המאמנים.", admin);
-
-        long tourney = insertTournament(db, club, "אליפות פתח תקווה לנוער", "2026-06-01");
-        insertResult(db, tourney, child1, 4.5, 6, 3);
-        insertResult(db, tourney, child2, 3.0, 6, 8);
-
-        insertAssignment(db, club, gA, "תרגילי מט בשניים",
-                "פתרו את 10 התרגילים המצורפים והביאו למפגש הבא.", null, "2026-07-25", tutor);
-
-        // A small club roster so name-based semi-auto approval can be demoed.
-        insertPlayer(db, club, "IL-1001", "דניאל כהן", 1450, "ISR");
-        insertPlayer(db, club, "IL-1002", "נועה לוי", 1320, "ISR");
-        insertPlayer(db, club, "IL-1003", "יונתן כהן", 1600, "ISR");
-    }
-
-    private void insertPlayer(SQLiteDatabase db, long clubId, String externalId,
-                              String name, int rating, String fed) {
-        ContentValues v = new ContentValues();
-        v.put("club_id", clubId);
-        v.put("external_id", externalId);
-        v.put("full_name", name);
-        v.put("rating", rating);
-        v.put("federation", fed);
-        db.insertWithOnConflict(T_PLAYERS, null, v, SQLiteDatabase.CONFLICT_IGNORE);
+        // No placeholder content is seeded. Puzzles load live from Lichess, and
+        // news / library / tournaments / assignments / roster start empty and are
+        // filled with real content by the club's staff.
     }
 
     private long insertGroup(SQLiteDatabase db, long clubId, String name,
@@ -320,74 +276,4 @@ public class DbHelper extends SQLiteOpenHelper {
         db.insert(T_GROUP_MEMBERS, null, v);
     }
 
-    private void insertPuzzle(SQLiteDatabase db, long clubId, String title, int level,
-                              String fen, String sol, long by) {
-        ContentValues v = new ContentValues();
-        v.put("club_id", clubId);
-        v.put("title", title);
-        v.put("level", level);
-        v.put("fen", fen);
-        v.put("solution_uci", sol);
-        v.put("created_by", by);
-        db.insert(T_PUZZLES, null, v);
-    }
-
-    private void insertBook(SQLiteDatabase db, long clubId, String title, String author,
-                            String lang, String category, String side,
-                            int rMin, int rMax, long by) {
-        ContentValues v = new ContentValues();
-        v.put("club_id", clubId);
-        v.put("title", title);
-        v.put("author", author);
-        v.put("language", lang);
-        v.put("category", category);
-        v.put("side", side);
-        v.put("rating_min", rMin);
-        v.put("rating_max", rMax);
-        v.put("uploaded_by", by);
-        db.insert(T_BOOKS, null, v);
-    }
-
-    private void insertNews(SQLiteDatabase db, long clubId, String title, String body, long by) {
-        ContentValues v = new ContentValues();
-        v.put("club_id", clubId);
-        v.put("title", title);
-        v.put("body", body);
-        v.put("date", "2026-07-15");
-        v.put("created_by", by);
-        db.insert(T_NEWS, null, v);
-    }
-
-    private long insertTournament(SQLiteDatabase db, long clubId, String name, String date) {
-        ContentValues v = new ContentValues();
-        v.put("club_id", clubId);
-        v.put("name", name);
-        v.put("date", date);
-        return db.insert(T_TOURNAMENTS, null, v);
-    }
-
-    private void insertResult(SQLiteDatabase db, long tId, long childId,
-                              double points, int games, int standing) {
-        ContentValues v = new ContentValues();
-        v.put("tournament_id", tId);
-        v.put("child_id", childId);
-        v.put("points", points);
-        v.put("games", games);
-        v.put("standing", standing);
-        db.insert(T_RESULTS, null, v);
-    }
-
-    private long insertAssignment(SQLiteDatabase db, long clubId, long groupId, String title,
-                                  String desc, String fileUri, String due, long by) {
-        ContentValues v = new ContentValues();
-        v.put("club_id", clubId);
-        v.put("group_id", groupId);
-        v.put("title", title);
-        v.put("description", desc);
-        v.put("file_uri", fileUri);
-        v.put("due_date", due);
-        v.put("created_by", by);
-        v.put("created_at", System.currentTimeMillis());
-        return db.insert(T_ASSIGNMENTS, null, v);
-    }
 }

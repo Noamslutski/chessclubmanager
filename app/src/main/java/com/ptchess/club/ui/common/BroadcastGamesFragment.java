@@ -56,7 +56,8 @@ public class BroadcastGamesFragment extends Fragment {
         emptyView.setVisibility(View.GONE);
         Async.io(() -> {
             String pgn = roundId != null ? LichessBroadcast.roundPgn(roundId) : null;
-            List<PgnImporter.GameRecord> games = PgnImporter.parseGames(pgn);
+            List<PgnImporter.GameRecord> games = PgnImporter.filterElite(
+                    PgnImporter.parseGames(pgn), PgnImporter.ELITE_MIN_ELO);
             Async.main(() -> {
                 if (!isAdded()) return;
                 loadingBar.setVisibility(View.GONE);

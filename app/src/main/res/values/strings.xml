@@ -101,10 +101,10 @@
     <string name="watch_title">משחק חי מ־Lichess TV</string>
     <string name="watch_connecting">מתחבר לשידור החי…</string>
     <string name="watch_failed">החיבור לשידור נכשל. בדוק את החיבור לאינטרנט.</string>
-    <string name="watch_broadcasts">שידורים חיים (OTB)</string>
+    <string name="watch_broadcasts">שידורים חיים (OTB) · 2400+</string>
     <string name="watch_no_broadcasts">לא נמצאו שידורים כרגע.</string>
-    <string name="watch_select_game">בחר משחק לצפייה</string>
-    <string name="watch_no_games">אין משחקים בסבב זה עדיין.</string>
+    <string name="watch_select_game">משחקי עילית (2400+)</string>
+    <string name="watch_no_games">אין משחקים ברמה 2400+ בסבב זה.</string>
     <string name="watch_live">חי</string>
     <string name="viewer_move">מהלך %1$d מתוך %2$d</string>
     <string name="viewer_start_position">עמדת פתיחה</string>

@@ -105,6 +105,26 @@ public final class PgnImporter {
         return out;
     }
 
+    /** For now the Watch section only shows elite games (both players rated 2400+). */
+    public static final int ELITE_MIN_ELO = 2400;
+
+    /** Keeps only games where both players are rated at least {@code minElo}. */
+    public static List<GameRecord> filterElite(List<GameRecord> games, int minElo) {
+        List<GameRecord> out = new ArrayList<>();
+        for (GameRecord g : games) {
+            if (parseElo(g.whiteElo) >= minElo && parseElo(g.blackElo) >= minElo) out.add(g);
+        }
+        return out;
+    }
+
+    private static int parseElo(String elo) {
+        try {
+            return Integer.parseInt(elo.trim());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     private static GameRecord parseGameRecord(String game) {
         GameRecord g = new GameRecord();
         StringBuilder movetext = new StringBuilder();

@@ -18,10 +18,11 @@ android {
         resConfigs "he", "en"
         vectorDrawables.useSupportLibrary = true
 
-        // parse.bot players API key — supplied at build time, never committed.
-        // Put `parseApiKey=...` in ~/.gradle/gradle.properties or pass -PparseApiKey=...
-        buildConfigField "String", "PARSE_API_KEY",
-                "\"${project.findProperty('parseApiKey') ?: ''}\""
+        // parse.bot API key — supplied at build time, never committed. Resolved from
+        // (1) -PparseApiKey=... , (2) parseApiKey in ~/.gradle/gradle.properties, or
+        // (3) the PARSE_API_KEY environment variable.
+        def parseApiKey = project.findProperty('parseApiKey') ?: System.getenv('PARSE_API_KEY') ?: ''
+        buildConfigField "String", "PARSE_API_KEY", "\"${parseApiKey}\""
     }
 
     buildTypes {

@@ -50,6 +50,7 @@ public class PuzzlesFragment extends Fragment {
     private List<Puzzle> puzzles = new ArrayList<>();
     private int currentLevel = 0; // 0 = all levels
     private int index = 0;
+    private boolean autoLoadTried = false;
 
     private ChessBoard board;
     private List<String> solution;
@@ -100,9 +101,38 @@ public class PuzzlesFragment extends Fragment {
             List<Puzzle> loaded = repo.getPuzzles(clubId);
             Async.main(() -> {
                 if (!isAdded()) return;
+                // No local puzzles yet → pull real puzzles from Lichess automatically.
+                if (loaded.isEmpty() && !autoLoadTried) {
+                    autoLoadTried = true;
+                    autoLoadFromLichess();
+                    return;
+                }
                 allPuzzles = loaded;
                 rebuildLevelChips();
                 applyFilter(currentLevel);
+                if (loaded.isEmpty()) {
+                    status.setTextColor(getResources().getColor(R.color.text_muted, null));
+                    status.setText(R.string.lichess_failed);
+                }
+            });
+        });
+    }
+
+    /** First-run: fetch a spread of real Lichess puzzles into the club pool. */
+    private void autoLoadFromLichess() {
+        status.setTextColor(getResources().getColor(R.color.text_muted, null));
+        status.setText(R.string.lichess_loading);
+        User user = ((MainActivity) requireActivity()).getCurrentUser();
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
+            for (String difficulty : new String[]{"easier", "normal", "harder"}) {
+                for (LichessApi.RemotePuzzle rp : LichessApi.fetchBatch(difficulty, 4)) {
+                    if (rp.solutionUci == null || rp.solutionUci.isEmpty()) continue;
+                    repo.addPuzzle(user.clubId, rp.title, rp.level, rp.fen, rp.solutionUci, user.id);
+                }
+            }
+            Async.main(() -> {
+                if (isAdded()) loadPuzzles();
             });
         });
     }

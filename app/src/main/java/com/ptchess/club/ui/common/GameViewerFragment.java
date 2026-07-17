@@ -93,7 +93,8 @@ public class GameViewerFragment extends Fragment {
     private void fetch(boolean initial) {
         Async.io(() -> {
             String pgn = roundId != null ? LichessBroadcast.roundPgn(roundId) : null;
-            List<PgnImporter.GameRecord> games = PgnImporter.parseGames(pgn);
+            List<PgnImporter.GameRecord> games = PgnImporter.filterElite(
+                    PgnImporter.parseGames(pgn), PgnImporter.ELITE_MIN_ELO);
             Async.main(() -> {
                 if (!isAdded()) return;
                 if (gameIndex < games.size()) {
