@@ -16,9 +16,9 @@ import com.ptchess.club.ui.auth.AuthActivity;
 import com.ptchess.club.ui.child.LibraryFragment;
 import com.ptchess.club.ui.child.PuzzlesFragment;
 import com.ptchess.club.ui.common.BaseActivity;
-import com.ptchess.club.ui.common.GroupsFragment;
 import com.ptchess.club.ui.common.HomeFragment;
 import com.ptchess.club.ui.common.MoreFragment;
+import com.ptchess.club.ui.common.WatchFragment;
 
 /** Root screen after login: toolbar + bottom navigation hosting the sections. */
 public class MainActivity extends BaseActivity {
@@ -52,7 +52,7 @@ public class MainActivity extends BaseActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) return top(new HomeFragment(), R.string.app_name);
-            if (id == R.id.nav_groups) return top(new GroupsFragment(), R.string.nav_groups);
+            if (id == R.id.nav_watch) return top(new WatchFragment(), R.string.nav_watch);
             if (id == R.id.nav_puzzles) return top(new PuzzlesFragment(), R.string.nav_puzzles);
             if (id == R.id.nav_library) return top(new LibraryFragment(), R.string.nav_library);
             if (id == R.id.nav_more) return top(new MoreFragment(), R.string.nav_more);

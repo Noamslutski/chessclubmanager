@@ -17,6 +17,11 @@ android {
         // Support Hebrew (default) and English resources.
         resConfigs "he", "en"
         vectorDrawables.useSupportLibrary = true
+
+        // parse.bot players API key — supplied at build time, never committed.
+        // Put `parseApiKey=...` in ~/.gradle/gradle.properties or pass -PparseApiKey=...
+        buildConfigField "String", "PARSE_API_KEY",
+                "\"${project.findProperty('parseApiKey') ?: ''}\""
     }
 
     buildTypes {
@@ -38,6 +43,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 

@@ -16,8 +16,12 @@ import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.ui.admin.AdminFragment;
+import com.ptchess.club.ui.admin.PlayersFragment;
+import com.ptchess.club.ui.admin.VerifyClubsFragment;
 import com.ptchess.club.ui.parent.ChildrenFragment;
 import com.ptchess.club.ui.tutor.AssignmentsFragment;
+import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.util.Async;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +43,10 @@ public class MoreFragment extends Fragment {
         MainActivity host = (MainActivity) requireActivity();
         User user = host.getCurrentUser();
         List<MoreAdapter.MoreItem> items = new ArrayList<>();
+
+        items.add(new MoreAdapter.MoreItem(R.drawable.ic_groups,
+                getString(R.string.nav_groups),
+                () -> host.openSection(new GroupsFragment(), getString(R.string.nav_groups))));
 
         items.add(new MoreAdapter.MoreItem(R.drawable.ic_assignment,
                 getString(R.string.nav_assignments),
@@ -64,6 +72,32 @@ public class MoreFragment extends Fragment {
                 getString(R.string.nav_settings),
                 () -> host.openSection(new SettingsFragment(), getString(R.string.nav_settings))));
 
-        recycler.setAdapter(new MoreAdapter(items));
+        MoreAdapter adapter = new MoreAdapter(items);
+        recycler.setAdapter(adapter);
+
+        // Verified-club admins get "Import players"; the super admin also gets
+        // "Verify clubs". Both depend on DB state, so they are resolved async.
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        boolean superAdmin = ClubRepository.isSuperAdmin(user);
+        Async.io(() -> {
+            boolean verified = repo.isClubVerified(user.clubId);
+            Async.main(() -> {
+                if (!isAdded()) return;
+                int insertAt = Math.max(0, items.size() - 1); // before Settings
+                if (user.role == Role.ADMIN && (verified || superAdmin)) {
+                    items.add(insertAt, new MoreAdapter.MoreItem(R.drawable.ic_groups,
+                            getString(R.string.nav_players),
+                            () -> host.openSection(new PlayersFragment(),
+                                    getString(R.string.nav_players))));
+                }
+                if (superAdmin) {
+                    items.add(new MoreAdapter.MoreItem(R.drawable.ic_admin,
+                            getString(R.string.nav_verify_clubs),
+                            () -> host.openSection(new VerifyClubsFragment(),
+                                    getString(R.string.nav_verify_clubs))));
+                }
+                adapter.notifyDataSetChanged();
+            });
+        });
     }
 }

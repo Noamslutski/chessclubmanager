@@ -63,6 +63,27 @@
     <string name="nav_tournaments">תוצאות טורנירים</string>
     <string name="nav_children">הילדים שלי</string>
     <string name="nav_settings">הגדרות</string>
+    <string name="nav_watch">צפייה</string>
+    <string name="nav_players">שחקנים</string>
+    <string name="nav_verify_clubs">אימות מועדונים</string>
+    <string name="players_title">ייבוא שחקנים</string>
+    <string name="search_players_hint">חיפוש שחקן לפי שם</string>
+    <string name="my_roster">הסגל שלי</string>
+    <string name="add_player">הוספה</string>
+    <string name="player_added">%1$s נוסף לסגל</string>
+    <string name="player_exists">השחקן כבר בסגל</string>
+    <string name="players_none">לא נמצאו שחקנים</string>
+    <string name="players_no_key">מפתח ה־API אינו מוגדר. יש להגדיר parseApiKey בזמן הבנייה או להשתמש בשרת המועדון.</string>
+    <string name="players_not_verified">ייבוא שחקנים זמין רק לבעלי מועדון מאומתים. פנה למנהל האפליקציה לאימות.</string>
+    <string name="verify_clubs_title">מועדונים לאימות</string>
+    <string name="verify">אימות</string>
+    <string name="unverify">בטל אימות</string>
+    <string name="club_verified">מאומת ✓</string>
+    <string name="club_unverified">ממתין לאימות</string>
+    <string name="no_clubs">אין מועדונים.</string>
+    <string name="watch_title">משחק חי מ־Lichess TV</string>
+    <string name="watch_connecting">מתחבר לשידור החי…</string>
+    <string name="watch_failed">החיבור לשידור נכשל. בדוק את החיבור לאינטרנט.</string>
 
     <!-- Home / news -->
     <string name="home_welcome">שלום, %1$s</string>

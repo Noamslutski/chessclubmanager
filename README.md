@@ -29,12 +29,17 @@ Command line (once the SDK is configured and a `local.properties` with `sdk.dir`
 
 Seeded on first launch (`DbHelper.seed`). Passwords are stored **hashed** (PBKDF2).
 
-| Role    | Email                   | Password      |
-|---------|-------------------------|---------------|
-| Admin   | `admin@ptchess.co.il`   | `Admin#2026`  |
-| Tutor   | `tutor@ptchess.co.il`   | `Tutor#2026`  |
-| Student | `child@ptchess.co.il`   | `Child#2026`  |
-| Parent  | `parent@ptchess.co.il`  | `Parent#2026` |
+| Role                | Email                   | Password      |
+|---------------------|-------------------------|---------------|
+| **Super admin**     | `noamslutski@gmail.com` | `Noam#2026`   |
+| Club admin          | `admin@ptchess.co.il`   | `Admin#2026`  |
+| Tutor               | `tutor@ptchess.co.il`   | `Tutor#2026`  |
+| Student             | `child@ptchess.co.il`   | `Child#2026`  |
+| Parent              | `parent@ptchess.co.il`  | `Parent#2026` |
+
+The **super admin** (`noamslutski@gmail.com`) owns the seeded, verified "Petach
+Tikva" club and can **verify other clubs** (More → Verify clubs), which unlocks
+player import for those clubs' admins.
 
 There is also a **pending** registration (`pending@ptchess.co.il`) so the admin
 approvals screen is not empty. Replace the seeded admin with your real credentials
@@ -101,6 +106,47 @@ endgame/psychology/strategy/tactics), **side** (white/black/both), **rating rang
   `child_email, tournament, date, points, games, standing` (a header row is skipped
   automatically). Rows are scoped so a student sees only their own results, a parent
   their children's, a tutor their students', and an admin everything.
+
+## Clubs (multi-tenant)
+
+Each user belongs to one club; groups, puzzles, books, news, assignments and
+tournaments are all scoped by club. On registration you either **join an existing
+club** (as a student pending approval) or **create a new club** (becoming its
+active admin/owner). Parents inherit their child's club automatically. Admins can
+create groups, add students, promote users to Tutor/Admin, and post content — all
+within their own club.
+
+## Watch (Lichess TV)
+
+The **Watch** tab streams the current featured Lichess TV game live (the Lichess
+"DGT board"), rendering each move on a read-only board with the players' names.
+Uses the public `GET /api/tv/feed` NDJSON stream; the connection is closed when
+you leave the screen.
+
+## Player import (verified club owners)
+
+Verified-club admins get **More → Players**: search the federation players
+database and add players to the club roster (deduped per club). The search calls
+the parse.bot scraper API. The API key is read from `BuildConfig.PARSE_API_KEY`,
+supplied at build time from a Gradle property and **never committed**:
+
+```
+# in ~/.gradle/gradle.properties (NOT the project file)
+parseApiKey=your-parse-bot-key
+```
+
+> **Backend required for the full spec.** "No duplicates across different owners"
+> and "the app admin approves each request" are shared, server-side workflows —
+> different owners on different devices can't dedup against each other or wait on
+> one person's approval without a backend. The client does per-club dedup and
+> local super-admin verification only, and a shipped app should proxy the
+> parse.bot call through the club server rather than embed any API key.
+
+## chess-results tournaments
+
+Import a tournament's final ranking by exporting it from chess-results.com to
+Excel, saving as CSV, and using **Tournaments → Import results**. Expected columns:
+`child_email, tournament, date, points, games, standing`.
 
 ## Localization
 

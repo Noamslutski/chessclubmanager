@@ -58,6 +58,27 @@
     <string name="nav_tournaments">Tournaments</string>
     <string name="nav_children">My children</string>
     <string name="nav_settings">Settings</string>
+    <string name="nav_watch">Watch</string>
+    <string name="nav_players">Players</string>
+    <string name="nav_verify_clubs">Verify clubs</string>
+    <string name="players_title">Import players</string>
+    <string name="search_players_hint">Search a player by name</string>
+    <string name="my_roster">My roster</string>
+    <string name="add_player">Add</string>
+    <string name="player_added">%1$s added to the roster</string>
+    <string name="player_exists">Player is already on the roster</string>
+    <string name="players_none">No players found</string>
+    <string name="players_no_key">API key is not configured. Set parseApiKey at build time or use the club backend.</string>
+    <string name="players_not_verified">Player import is only for verified club owners. Ask the app admin to verify your club.</string>
+    <string name="verify_clubs_title">Clubs to verify</string>
+    <string name="verify">Verify</string>
+    <string name="unverify">Unverify</string>
+    <string name="club_verified">Verified ✓</string>
+    <string name="club_unverified">Pending verification</string>
+    <string name="no_clubs">No clubs.</string>
+    <string name="watch_title">Live game from Lichess TV</string>
+    <string name="watch_connecting">Connecting to the live broadcast…</string>
+    <string name="watch_failed">Could not connect to the broadcast. Check your internet.</string>
 
     <string name="home_welcome">Hello, %1$s</string>
     <string name="home_news">Club news</string>
