@@ -14,9 +14,11 @@ service cloud.firestore {
     function isAdmin() { return myRole() == "ADMIN"; }
     function inClub(clubId) { return signedIn() && myClub() == clubId; }
 
-    // Shared puzzle pool — read by any signed-in user, written only by functions.
+    // Shared puzzle pool — non-sensitive reference content, so publicly readable
+    // (the app reads it before migrating to Firebase Auth). Written only by the
+    // ingestion Cloud Function via the Admin SDK.
     match /puzzles/{puzzleId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow write: if false;
     }
 
