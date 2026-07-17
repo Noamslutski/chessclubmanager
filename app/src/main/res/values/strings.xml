@@ -108,6 +108,7 @@
     <string name="watch_live">חי</string>
     <string name="viewer_move">מהלך %1$d מתוך %2$d</string>
     <string name="viewer_start_position">עמדת פתיחה</string>
+    <string name="material_even">חומר שווה</string>
     <string name="board_number">לוח %1$s</string>
 
     <!-- Home / news -->
@@ -217,6 +218,7 @@
     <string name="promote">קידום לתפקיד</string>
     <string name="set_role">קביעת תפקיד</string>
     <string name="no_pending">אין בקשות ממתינות.</string>
+    <string name="confirm_reject">לדחות את בקשת ההרשמה של %1$s?</string>
     <string name="user_status_pending">ממתין</string>
     <string name="user_status_active">פעיל</string>
 

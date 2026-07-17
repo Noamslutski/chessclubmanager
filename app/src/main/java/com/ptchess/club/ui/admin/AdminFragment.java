@@ -83,10 +83,14 @@ public class AdminFragment extends Fragment {
 
             secondary.setVisibility(View.VISIBLE);
             secondary.setText(R.string.reject);
-            secondary.setOnClickListener(v -> Async.io(() -> {
-                repo.rejectUser(user.id);
-                Async.main(this::load);
-            }));
+            secondary.setOnClickListener(v -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setMessage(getString(R.string.confirm_reject, user.fullName))
+                    .setPositiveButton(R.string.reject, (d, w) -> Async.io(() -> {
+                        repo.rejectUser(user.id);
+                        Async.main(this::load);
+                    }))
+                    .setNegativeButton(R.string.cancel, null)
+                    .show());
         } else {
             primary.setVisibility(View.VISIBLE);
             primary.setText(R.string.set_role);

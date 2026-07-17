@@ -84,6 +84,15 @@
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
+        <TextView
+            android:id="@+id/txtMaterial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:textColor="@color/gold_soft"
+            android:textSize="16sp" />
+
         <!-- Navigation controls -->
         <LinearLayout
             android:layout_width="match_parent"

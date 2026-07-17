@@ -39,6 +39,7 @@ public class GameViewerFragment extends Fragment {
 
     private ChessBoardView board;
     private TextView txtWhite, txtBlack, txtWhiteClock, txtBlackClock, txtMoveInfo, txtMoves, txtStatus;
+    private TextView txtMaterial;
 
     private String roundId;
     private int gameIndex;
@@ -67,6 +68,7 @@ public class GameViewerFragment extends Fragment {
         txtWhiteClock = v.findViewById(R.id.txtWhiteClock);
         txtBlackClock = v.findViewById(R.id.txtBlackClock);
         txtMoveInfo = v.findViewById(R.id.txtMoveInfo);
+        txtMaterial = v.findViewById(R.id.txtMaterial);
         txtMoves = v.findViewById(R.id.txtMoves);
         txtStatus = v.findViewById(R.id.txtViewerStatus);
         board.setInteractive(false);
@@ -139,7 +141,55 @@ public class GameViewerFragment extends Fragment {
                 ? getString(R.string.viewer_start_position)
                 : getString(R.string.viewer_move, ply, total));
 
+        updateMaterial(b);
         txtMoves.setText(buildMoveList());
+    }
+
+    // Piece order P,N,B,R,Q for counts/values/glyphs.
+    private static final int[] START = {8, 2, 2, 2, 1};
+    private static final int[] VALUE = {1, 3, 3, 5, 9};
+    private static final String[] BLACK_GLYPH = {"♟", "♞", "♝", "♜", "♛"};
+    private static final String[] WHITE_GLYPH = {"♙", "♘", "♗", "♖", "♕"};
+
+    private void updateMaterial(ChessBoard b) {
+        int[] white = new int[5], black = new int[5];
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                int idx = typeIndex(b.pieceAt(r, c));
+                if (idx < 0) continue;
+                if (ChessBoard.isWhite(b.pieceAt(r, c))) white[idx]++;
+                else black[idx]++;
+            }
+        }
+        int netVal = 0;
+        for (int i = 0; i < 5; i++) netVal += (white[i] - black[i]) * VALUE[i];
+
+        // Captured pieces = the opponent's pieces missing from the board.
+        boolean whiteAhead = netVal > 0;
+        StringBuilder caps = new StringBuilder();
+        for (int i = 4; i >= 0; i--) {
+            int missing = whiteAhead ? START[i] - black[i] : START[i] - white[i];
+            for (int k = 0; k < missing && k < 8; k++) {
+                caps.append(whiteAhead ? BLACK_GLYPH[i] : WHITE_GLYPH[i]);
+            }
+        }
+        if (netVal == 0) {
+            txtMaterial.setText(R.string.material_even);
+        } else {
+            String side = whiteAhead ? getString(R.string.side_white) : getString(R.string.side_black);
+            txtMaterial.setText(side + " +" + Math.abs(netVal) + "   " + caps);
+        }
+    }
+
+    private int typeIndex(char p) {
+        switch (Character.toUpperCase(p)) {
+            case 'P': return 0;
+            case 'N': return 1;
+            case 'B': return 2;
+            case 'R': return 3;
+            case 'Q': return 4;
+            default: return -1;
+        }
     }
 
     private CharSequence buildMoveList() {
