@@ -17,6 +17,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseAuthService;
+import com.ptchess.club.data.firebase.FirebaseProfile;
 import com.ptchess.club.data.model.Club;
 import com.ptchess.club.security.InputValidator;
 import com.ptchess.club.util.Async;
@@ -58,13 +60,11 @@ public class RegisterFragment extends Fragment {
         btnRegister.setOnClickListener(v -> attemptRegister());
         view.findViewById(R.id.linkLogin).setOnClickListener(v -> auth().showLogin());
 
-        // Position 0 = "Create a new club"; the rest are existing clubs.
         clubSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View v, int pos, long id) {
+            @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
                 newClubLayout.setVisibility(pos == 0 ? View.VISIBLE : View.GONE);
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
+            @Override public void onNothingSelected(AdapterView<?> p) { }
         });
 
         loadClubs();
@@ -90,13 +90,13 @@ public class RegisterFragment extends Fragment {
     }
 
     private void attemptRegister() {
-        String fullName = text(name);
-        String mail = text(email);
-        String pass = text(password);
+        final String fullName = text(name);
+        final String mail = text(email);
+        final String pass = text(password);
         String conf = text(confirm);
-        String ph = text(phone);
-        String cMail = text(childEmail);
-        String cPass = text(childPassword);
+        final String ph = text(phone);
+        final String cMail = text(childEmail);
+        final String cPass = text(childPassword);
 
         if (!InputValidator.isValidName(fullName)) {
             UiUtils.toast(requireContext(), R.string.err_required);
@@ -115,7 +115,6 @@ public class RegisterFragment extends Fragment {
             return;
         }
 
-        // Resolve club choice (ignored when linking to a child — that inherits the child's club).
         int pos = clubSpinner.getSelectedItemPosition();
         long joinClubId = 0;
         String newClubName = null;
@@ -135,18 +134,69 @@ public class RegisterFragment extends Fragment {
         final long joinId = joinClubId;
         final String createName = newClubName;
         btnRegister.setEnabled(false);
-        ClubRepository repo = ClubRepository.getInstance(requireContext());
-        Async.io(() -> {
-            ClubRepository.RegisterResult result =
-                    repo.register(fullName, mail, pass, ph, cMail, cPass, joinId, createName);
-            Async.main(() -> handleResult(result));
+
+        if (!FirebaseAuthService.enabled(requireContext())) {
+            ClubRepository repo = ClubRepository.getInstance(requireContext());
+            Async.io(() -> {
+                ClubRepository.RegisterResult r =
+                        repo.register(fullName, mail, pass, ph, cMail, cPass, joinId, createName);
+                Async.main(() -> handleStatus(r.status, r.linkedChildName));
+            });
+            return;
+        }
+
+        // Firebase path: verify the child first (if linking) to find their club.
+        if (linkingChild) {
+            FirebaseAuthService.verifyCredentials(requireContext(), cMail, cPass,
+                    new FirebaseAuthService.AuthCb() {
+                        @Override public void onSuccess(String childUid) {
+                            FirebaseProfile.fetch(childUid, child -> createAccount(fullName, mail, pass,
+                                    ph, joinId, createName, cMail,
+                                    child != null ? child.clubId : 0,
+                                    child != null ? child.fullName : null));
+                        }
+                        @Override public void onError(String message) {
+                            createAccount(fullName, mail, pass, ph, joinId, createName, cMail, 0, null);
+                        }
+                    });
+        } else {
+            createAccount(fullName, mail, pass, ph, joinId, createName, cMail, 0, null);
+        }
+    }
+
+    private void createAccount(String fullName, String mail, String pass, String ph,
+                               long joinClubId, String newClubName, String childEmailStr,
+                               long childClubId, String childName) {
+        FirebaseAuthService.register(mail, pass, new FirebaseAuthService.AuthCb() {
+            @Override public void onSuccess(String uid) {
+                ClubRepository repo = ClubRepository.getInstance(requireContext());
+                Async.io(() -> {
+                    ClubRepository.ProfileResult pr = repo.registerProfileOnly(
+                            fullName, mail, ph, joinClubId, newClubName,
+                            childEmailStr, childClubId, childName);
+                    FirebaseProfile.write(uid, pr.user);
+                    if (pr.status == ClubRepository.RegisterResult.Status.SUCCESS_PENDING && pr.user != null) {
+                        FirebaseProfile.queueRegistration(pr.user.clubId, pr.user.fullName, pr.user.email);
+                    }
+                    Async.main(() -> handleStatus(pr.status, pr.info));
+                });
+            }
+            @Override public void onError(String message) {
+                if (!isAdded()) return;
+                btnRegister.setEnabled(true);
+                if (message != null && message.toLowerCase().contains("already")) {
+                    UiUtils.toast(requireContext(), R.string.err_email_exists);
+                } else {
+                    UiUtils.toast(requireContext(), R.string.err_password_weak);
+                }
+            }
         });
     }
 
-    private void handleResult(ClubRepository.RegisterResult result) {
+    private void handleStatus(ClubRepository.RegisterResult.Status status, String info) {
         if (!isAdded()) return;
         btnRegister.setEnabled(true);
-        switch (result.status) {
+        switch (status) {
             case SUCCESS_PENDING:
                 UiUtils.toast(requireContext(), R.string.msg_register_pending);
                 auth().showLogin();
@@ -156,13 +206,11 @@ public class RegisterFragment extends Fragment {
                 auth().showLogin();
                 break;
             case SUCCESS_PARENT:
-                UiUtils.toast(requireContext(),
-                        getString(R.string.msg_parent_linked, result.linkedChildName));
+                UiUtils.toast(requireContext(), getString(R.string.msg_parent_linked, info));
                 auth().showLogin();
                 break;
             case SUCCESS_CLUB_CREATED:
-                UiUtils.toast(requireContext(),
-                        getString(R.string.msg_club_created, result.linkedChildName));
+                UiUtils.toast(requireContext(), getString(R.string.msg_club_created, info));
                 auth().showLogin();
                 break;
             case EMAIL_EXISTS:

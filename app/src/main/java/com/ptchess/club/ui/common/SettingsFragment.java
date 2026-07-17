@@ -74,6 +74,22 @@ public class SettingsFragment extends Fragment {
                 .setPositiveButton(R.string.save, (d, w) -> {
                     String cur = current.getText().toString();
                     String nw = next.getText().toString();
+                    if (!com.ptchess.club.security.InputValidator.isStrongPassword(nw)) {
+                        UiUtils.toast(requireContext(), R.string.err_password_weak);
+                        return;
+                    }
+                    if (com.ptchess.club.data.firebase.FirebaseAuthService.enabled(requireContext())) {
+                        com.ptchess.club.data.firebase.FirebaseAuthService.updatePassword(nw,
+                                new com.ptchess.club.data.firebase.FirebaseAuthService.AuthCb() {
+                                    @Override public void onSuccess(String uid) {
+                                        if (isAdded()) UiUtils.toast(requireContext(), R.string.save);
+                                    }
+                                    @Override public void onError(String message) {
+                                        if (isAdded()) UiUtils.toast(requireContext(), R.string.reauth_needed);
+                                    }
+                                });
+                        return;
+                    }
                     ClubRepository repo = ClubRepository.getInstance(requireContext());
                     Async.io(() -> {
                         boolean ok = repo.changePassword(user.id, cur, nw);

@@ -108,6 +108,7 @@ public class MainActivity extends BaseActivity {
 
     public void logout() {
         new SessionManager(this).clear();
+        com.ptchess.club.data.firebase.FirebaseAuthService.signOut();
         Intent i = new Intent(this, AuthActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(i);

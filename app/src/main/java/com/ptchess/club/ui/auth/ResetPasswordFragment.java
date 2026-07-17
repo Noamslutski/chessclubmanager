@@ -13,6 +13,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseAuthService;
 import com.ptchess.club.security.InputValidator;
 import com.ptchess.club.util.UiUtils;
 
@@ -38,11 +39,18 @@ public class ResetPasswordFragment extends Fragment {
                 UiUtils.toast(requireContext(), R.string.err_email_invalid);
                 return;
             }
-            // The same neutral message is shown whether or not the email exists,
-            // so the screen never reveals which addresses are registered.
-            ClubRepository.getInstance(requireContext()).requestPasswordReset(email);
-            UiUtils.toast(requireContext(), R.string.msg_reset_sent);
-            ((AuthActivity) requireActivity()).showLogin();
+            // Same neutral message regardless of existence (no email enumeration).
+            if (FirebaseAuthService.enabled(requireContext())) {
+                FirebaseAuthService.sendReset(email, () -> {
+                    if (!isAdded()) return;
+                    UiUtils.toast(requireContext(), R.string.msg_reset_sent);
+                    ((AuthActivity) requireActivity()).showLogin();
+                });
+            } else {
+                ClubRepository.getInstance(requireContext()).requestPasswordReset(email);
+                UiUtils.toast(requireContext(), R.string.msg_reset_sent);
+                ((AuthActivity) requireActivity()).showLogin();
+            }
         });
 
         view.findViewById(R.id.linkBack).setOnClickListener(v ->

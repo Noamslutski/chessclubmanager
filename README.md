@@ -180,9 +180,11 @@ firebase.json         deploy config    ·    .firebaserc  (set your project id)
 - ⏱ **Auto Lichess puzzles** — `ingestLichessPuzzles` runs daily, reconstructs each FEN with
   `chess.js`, and writes to the shared Firestore `puzzles` pool. The app reads that pool first
   (`PuzzleCloud`) and only falls back to fetching Lichess directly when Firebase is absent.
-- 📥 Library PDFs, club logos/banners and assignment files → **Firebase Storage**.
-- ✉️ Admin email on new registrations; password-reset emails via Firebase Auth (after the
-  planned login migration to Firebase Auth, which the security rules already target).
+- 🔐 **Login, registration and password reset run on Firebase Auth** (Firebase‑first, with a
+  local fallback for seeded/offline accounts). Profiles live in `users/{uid}`, and the
+  `setUserClaims` function mirrors `role`/`clubId` into Auth custom claims for the rules.
+- ✉️ **Admin email on new registrations** (a `registrations` doc → Trigger Email extension).
+- 📥 Library PDFs, club logos/banners and assignment files → **Firebase Storage** (next step).
 
 > **Billing:** the scheduled function needs the **Blaze** plan (generous free tier — this
 > workload is effectively free). Firestore/Storage/Auth work on the free Spark plan.

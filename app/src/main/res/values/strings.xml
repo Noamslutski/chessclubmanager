@@ -238,6 +238,7 @@
     <string name="lang_english">English</string>
     <string name="account">חשבון</string>
     <string name="change_password">שינוי סיסמה</string>
+    <string name="reauth_needed">יש להתחבר מחדש כדי לשנות סיסמה.</string>
     <string name="security_note">כל הסיסמאות נשמרות מוצפנות. הגישה מבוססת תפקידים.</string>
 
     <!-- Generic -->

@@ -193,6 +193,107 @@ public final class ClubRepository {
         return (first + " " + last).trim();
     }
 
+    /** Outcome of a Firebase-backed registration (profile written locally). */
+    public static class ProfileResult {
+        public final RegisterResult.Status status;
+        public final long localUserId;
+        public final User user;      // local user for the Firestore profile write
+        public final String info;    // linked child / new club name for the message
+        public ProfileResult(RegisterResult.Status status, long localUserId, User user, String info) {
+            this.status = status;
+            this.localUserId = localUserId;
+            this.user = user;
+            this.info = info;
+        }
+    }
+
+    /**
+     * Builds the local profile for a user whose credentials are held by Firebase
+     * Auth. Determines club/role/status (create club, roster auto-approval, or
+     * parent link) and upserts the local mirror row. No password is stored.
+     */
+    public ProfileResult registerProfileOnly(String fullName, String email, String phone,
+                                              long joinClubId, String newClubName,
+                                              String childEmail, long childClubId, String childName) {
+        String normEmail = InputValidator.normalizeEmail(email);
+        boolean creatingClub = newClubName != null && !newClubName.trim().isEmpty();
+        boolean parent = childClubId > 0;
+
+        long clubId;
+        Role role;
+        String status;
+        int rating = 0;
+        RegisterResult.Status rs;
+
+        if (parent) {
+            clubId = childClubId;
+            role = Role.PARENT;
+            status = User.STATUS_ACTIVE;
+            rs = RegisterResult.Status.SUCCESS_PARENT;
+        } else if (creatingClub) {
+            clubId = 0;
+            role = Role.ADMIN;
+            status = User.STATUS_ACTIVE;
+            rs = RegisterResult.Status.SUCCESS_CLUB_CREATED;
+        } else {
+            clubId = joinClubId;
+            role = Role.CHILD;
+            Player match = findRosterPlayerByName(joinClubId, fullName);
+            if (match != null) {
+                status = User.STATUS_ACTIVE;
+                rating = match.rating;
+                rs = RegisterResult.Status.SUCCESS_AUTO_APPROVED;
+            } else {
+                status = User.STATUS_PENDING;
+                rs = RegisterResult.Status.SUCCESS_PENDING;
+            }
+        }
+
+        long localId = upsertLocalUser(fullName, normEmail, phone, role, status, clubId, rating);
+
+        if (creatingClub) {
+            long club = createClub(newClubName, localId, false);
+            setUserClub(localId, club);
+        }
+        if (parent && childEmail != null) {
+            User child = getUserByEmail(childEmail);
+            if (child != null) linkParentToChild(localId, child.id);
+        }
+
+        String info = parent ? childName : (creatingClub ? newClubName.trim() : null);
+        return new ProfileResult(rs, localId, getUserById(localId), info);
+    }
+
+    /** Inserts or refreshes the local mirror of a Firebase-authenticated user. */
+    public long upsertLocalUser(String fullName, String email, String phone,
+                                Role role, String status, long clubId, int rating) {
+        String normEmail = InputValidator.normalizeEmail(email);
+        User existing = getUserByEmail(normEmail);
+        ContentValues v = new ContentValues();
+        v.put("full_name", InputValidator.sanitizeLine(fullName, InputValidator.MAX_NAME));
+        v.put("email", normEmail);
+        v.put("phone", InputValidator.sanitizeLine(phone, 30));
+        v.put("role", role.name());
+        v.put("status", status);
+        v.put("club_id", clubId);
+        v.put("rating", rating);
+        SQLiteDatabase db = helper.getWritableDatabase();
+        if (existing != null) {
+            db.update(DbHelper.T_USERS, v, "_id = ?", new String[]{String.valueOf(existing.id)});
+            return existing.id;
+        }
+        v.put("password_hash", "firebase-auth"); // credentials live in Firebase
+        v.put("created_at", System.currentTimeMillis());
+        return db.insert(DbHelper.T_USERS, null, v);
+    }
+
+    private void setUserClub(long userId, long clubId) {
+        ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
+        helper.getWritableDatabase().update(DbHelper.T_USERS, v,
+                "_id = ?", new String[]{String.valueOf(userId)});
+    }
+
     public AuthResult authenticate(String email, String password) {
         String normEmail = InputValidator.normalizeEmail(email);
         long now = System.currentTimeMillis();

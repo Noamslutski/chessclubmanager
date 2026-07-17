@@ -224,6 +224,7 @@
     <string name="lang_english">English</string>
     <string name="account">Account</string>
     <string name="change_password">Change password</string>
+    <string name="reauth_needed">Please log in again to change your password.</string>
     <string name="security_note">All passwords are stored hashed. Access is role-based.</string>
 
     <string name="save">Save</string>

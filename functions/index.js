@@ -14,7 +14,7 @@
  */
 
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
@@ -140,6 +140,26 @@ async function getJson(url) {
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Mirror the user profile (role, clubId) into Auth custom claims for the rules
+// ---------------------------------------------------------------------------
+
+exports.setUserClaims = onDocumentWritten("users/{uid}", async (event) => {
+  const after = event.data && event.data.after && event.data.after.data();
+  if (!after) return; // profile deleted
+  const uid = event.params.uid;
+  const claims = {
+    role: after.role || "CHILD",
+    clubId: after.clubId || 0,
+  };
+  try {
+    await admin.auth().setCustomUserClaims(uid, claims);
+    logger.info(`Set claims for ${uid}: ${JSON.stringify(claims)}`);
+  } catch (e) {
+    logger.warn("Failed to set claims for " + uid, e);
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Email the club admin on a new registration
