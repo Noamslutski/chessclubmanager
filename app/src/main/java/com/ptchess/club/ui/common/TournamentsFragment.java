@@ -97,9 +97,10 @@ public class TournamentsFragment extends Fragment {
     private void onCsvPicked(@Nullable Uri uri) {
         if (uri == null) return;
         ClubRepository repo = ClubRepository.getInstance(requireContext());
+        long clubId = user.clubId;
         Async.io(() -> {
             String csv = readText(uri);
-            int added = repo.importResultsCsv(csv);
+            int added = repo.importResultsCsv(clubId, csv);
             Async.main(() -> {
                 if (!isAdded()) return;
                 UiUtils.toast(requireContext(), "CSV: +" + added);

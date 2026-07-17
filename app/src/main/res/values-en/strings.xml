@@ -19,6 +19,12 @@
     <string name="sign_in">Sign in</string>
     <string name="create_account">Create account</string>
     <string name="send_reset_link">Send reset link</string>
+    <string name="club">Club</string>
+    <string name="choose_club">Choose a club</string>
+    <string name="create_new_club">➕ Create a new club…</string>
+    <string name="club_name">Club name</string>
+    <string name="msg_club_created">Club \"%1$s\" created! You are its admin.</string>
+    <string name="err_club_required">Pick an existing club or create a new one</string>
     <string name="link_child_optional">Link a child account (optional)</string>
     <string name="link_child_help">Enter a registered child\'s email and password to receive parent access for them.</string>
     <string name="child_email">Child\'s email</string>
@@ -63,6 +69,12 @@
     <string name="group_when">%1$s at %2$s</string>
     <string name="group_members">Students: %1$d</string>
     <string name="no_groups">No groups found.</string>
+    <string name="add_group">Add group</string>
+    <string name="group_name_hint">Group name</string>
+    <string name="day">Day</string>
+    <string name="add_member">Add student</string>
+    <string name="no_tutors">No tutors in the club yet. Promote a user to Tutor first.</string>
+    <string name="members_added">Added %1$d students</string>
 
     <string name="puzzles_title">Chess puzzles</string>
     <string name="puzzle_level">Level %1$d</string>

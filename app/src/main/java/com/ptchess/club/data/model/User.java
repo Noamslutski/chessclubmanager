@@ -11,16 +11,19 @@ public class User {
     public String phone;
     public Role role;
     public String status;
+    public long clubId;
 
     public User() { }
 
-    public User(long id, String fullName, String email, String phone, Role role, String status) {
+    public User(long id, String fullName, String email, String phone,
+                Role role, String status, long clubId) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
         this.role = role;
         this.status = status;
+        this.clubId = clubId;
     }
 
     public boolean isActive() {

@@ -73,8 +73,9 @@ public class LibraryFragment extends Fragment implements BookAdapter.OnBookActio
 
     private void load() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
+        long clubId = ((MainActivity) requireActivity()).getCurrentUser().clubId;
         Async.io(() -> {
-            List<Book> books = repo.getBooks();
+            List<Book> books = repo.getBooks(clubId);
             Async.main(() -> {
                 if (!isAdded()) return;
                 recycler.setAdapter(new BookAdapter(books, this));
@@ -136,7 +137,7 @@ public class LibraryFragment extends Fragment implements BookAdapter.OnBookActio
                     String uri = pickedUri;
                     ClubRepository repo = ClubRepository.getInstance(requireContext());
                     Async.io(() -> {
-                        repo.addBook(t, author.getText().toString().trim(),
+                        repo.addBook(user.clubId, t, author.getText().toString().trim(),
                                 language.getText().toString().trim(), categoryKey, sideKey,
                                 min, max, uri, user.id);
                         Async.main(this::load);

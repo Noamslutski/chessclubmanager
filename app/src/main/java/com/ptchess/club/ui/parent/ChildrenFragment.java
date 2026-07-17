@@ -88,7 +88,7 @@ public class ChildrenFragment extends Fragment {
     private void contactAdmin() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
-            User admin = repo.getAnyAdmin();
+            User admin = repo.getClubAdmin(parent.clubId);
             Async.main(() -> showContact(admin));
         });
     }

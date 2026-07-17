@@ -17,6 +17,7 @@ import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
+import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.ui.common.UserAdapter;
 import com.ptchess.club.util.Async;
 import com.ptchess.club.util.UiUtils;
@@ -57,8 +58,10 @@ public class AdminFragment extends Fragment {
     private void load() {
         emptyView.setText(pendingMode ? R.string.no_pending : R.string.manage_users);
         ClubRepository repo = ClubRepository.getInstance(requireContext());
+        long clubId = ((MainActivity) requireActivity()).getCurrentUser().clubId;
         Async.io(() -> {
-            List<User> users = pendingMode ? repo.getPendingUsers() : repo.getAllUsers();
+            List<User> users = pendingMode
+                    ? repo.getPendingUsers(clubId) : repo.getAllUsers(clubId);
             Async.main(() -> {
                 if (!isAdded()) return;
                 recycler.setAdapter(new UserAdapter(users, this::bindActions));

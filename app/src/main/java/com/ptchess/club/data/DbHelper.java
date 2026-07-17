@@ -14,17 +14,21 @@ import com.ptchess.club.security.PasswordHasher;
  * parameterized statements — no query string is ever built by concatenating
  * user input, so SQL injection is not possible.
  *
- * <p>On a real deployment this local DB becomes an offline cache in front of a
- * backend (see README). For the demo it is seeded with a working data set.</p>
+ * <p>The app is multi-club: a user belongs to one club, and content (groups,
+ * puzzles, books, news, assignments, tournaments) is scoped by {@code club_id}.
+ * A user can create a new club on registration and becomes its admin/owner.</p>
  */
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "ptchess.db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
+
+    /** The main app admin: extra powers (verify clubs) are keyed to this email. */
+    public static final String SUPER_ADMIN_EMAIL = "noamslutski@gmail.com";
 
     // Tables
+    public static final String T_CLUBS = "clubs";
     public static final String T_USERS = "users";
-    // Avoid the SQLite reserved word "groups" (window-function frame keyword).
     public static final String T_GROUPS = "club_groups";
     public static final String T_GROUP_MEMBERS = "group_members";
     public static final String T_PARENT_CHILD = "parent_child";
@@ -36,6 +40,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public static final String T_RESULTS = "tournament_results";
     public static final String T_NEWS = "news";
     public static final String T_LOGIN_ATTEMPTS = "login_attempts";
+    public static final String T_PLAYERS = "club_players";
 
     public DbHelper(Context context) {
         super(context.getApplicationContext(), DB_NAME, null, DB_VERSION);
@@ -49,6 +54,13 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE " + T_CLUBS + " ("
+                + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "name TEXT NOT NULL,"
+                + "owner_id INTEGER,"
+                + "verified INTEGER NOT NULL DEFAULT 0,"
+                + "created_at INTEGER)");
+
         db.execSQL("CREATE TABLE " + T_USERS + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "full_name TEXT NOT NULL,"
@@ -57,10 +69,12 @@ public class DbHelper extends SQLiteOpenHelper {
                 + "phone TEXT,"
                 + "role TEXT NOT NULL,"
                 + "status TEXT NOT NULL,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "created_at INTEGER)");
 
         db.execSQL("CREATE TABLE " + T_GROUPS + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "name TEXT NOT NULL,"
                 + "day_index INTEGER NOT NULL,"
                 + "time TEXT,"
@@ -78,6 +92,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + T_PUZZLES + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "title TEXT,"
                 + "level INTEGER NOT NULL,"
                 + "fen TEXT NOT NULL,"
@@ -86,6 +101,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + T_BOOKS + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "title TEXT NOT NULL,"
                 + "author TEXT,"
                 + "language TEXT,"
@@ -98,6 +114,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + T_ASSIGNMENTS + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "group_id INTEGER NOT NULL,"
                 + "title TEXT NOT NULL,"
                 + "description TEXT,"
@@ -114,6 +131,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + T_TOURNAMENTS + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "name TEXT NOT NULL,"
                 + "date TEXT)");
 
@@ -127,6 +145,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + T_NEWS + " ("
                 + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL DEFAULT 0,"
                 + "title TEXT NOT NULL,"
                 + "body TEXT,"
                 + "date TEXT,"
@@ -137,18 +156,34 @@ public class DbHelper extends SQLiteOpenHelper {
                 + "fail_count INTEGER NOT NULL DEFAULT 0,"
                 + "lock_until INTEGER NOT NULL DEFAULT 0)");
 
+        // Federation players imported into a club (deduped per club by external id).
+        db.execSQL("CREATE TABLE " + T_PLAYERS + " ("
+                + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL,"
+                + "external_id TEXT,"
+                + "full_name TEXT NOT NULL,"
+                + "rating INTEGER,"
+                + "federation TEXT,"
+                + "UNIQUE(club_id, external_id))");
+
         seed(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Foundation: no migrations yet. A production build must migrate, not drop.
+        // Pre-release: recreate from scratch. A production build must migrate.
+        for (String t : new String[]{T_PLAYERS, T_LOGIN_ATTEMPTS, T_NEWS, T_RESULTS,
+                T_TOURNAMENTS, T_ASSIGN_STATUS, T_ASSIGNMENTS, T_BOOKS, T_PUZZLES,
+                T_PARENT_CHILD, T_GROUP_MEMBERS, T_GROUPS, T_USERS, T_CLUBS}) {
+            db.execSQL("DROP TABLE IF EXISTS " + t);
+        }
+        onCreate(db);
     }
 
     // ---------------------------------------------------------------- seeding
 
-    private long insertUser(SQLiteDatabase db, String name, String email,
-                            String password, String phone, Role role, String status) {
+    private long insertUser(SQLiteDatabase db, String name, String email, String password,
+                            String phone, Role role, String status, long clubId) {
         ContentValues v = new ContentValues();
         v.put("full_name", name);
         v.put("email", email.toLowerCase());
@@ -156,80 +191,90 @@ public class DbHelper extends SQLiteOpenHelper {
         v.put("phone", phone);
         v.put("role", role.name());
         v.put("status", status);
+        v.put("club_id", clubId);
         v.put("created_at", System.currentTimeMillis());
         return db.insert(T_USERS, null, v);
     }
 
-    private void seed(SQLiteDatabase db) {
-        // --- Accounts (change these before going live; see README) ---
-        long admin = insertUser(db, "מנהל המועדון", "admin@ptchess.co.il",
-                "Admin#2026", "+972500000001", Role.ADMIN, User.STATUS_ACTIVE);
-        long tutor = insertUser(db, "דוד לוי", "tutor@ptchess.co.il",
-                "Tutor#2026", "+972500000002", Role.TUTOR, User.STATUS_ACTIVE);
-        long child1 = insertUser(db, "יונתן כהן", "child@ptchess.co.il",
-                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE);
-        long child2 = insertUser(db, "מאיה פרץ", "maya@ptchess.co.il",
-                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE);
-        long parent = insertUser(db, "רונית כהן", "parent@ptchess.co.il",
-                "Parent#2026", "+972500000003", Role.PARENT, User.STATUS_ACTIVE);
-        // A pending registration so the admin approvals screen is not empty.
-        insertUser(db, "איתי גולן", "pending@ptchess.co.il",
-                "Pending#2026", null, Role.CHILD, User.STATUS_PENDING);
+    private long insertClub(SQLiteDatabase db, String name, long ownerId, boolean verified) {
+        ContentValues v = new ContentValues();
+        v.put("name", name);
+        v.put("owner_id", ownerId);
+        v.put("verified", verified ? 1 : 0);
+        v.put("created_at", System.currentTimeMillis());
+        return db.insert(T_CLUBS, null, v);
+    }
 
-        // Parent -> child link
+    private void seed(SQLiteDatabase db) {
+        // Super admin owns the founding, verified club.
+        long noam = insertUser(db, "נועם סלוצקי", SUPER_ADMIN_EMAIL,
+                "Noam#2026", "+972500000000", Role.ADMIN, User.STATUS_ACTIVE, 0);
+        long club = insertClub(db, "מועדון השחמט פתח תקווה", noam, true);
+        ContentValues cu = new ContentValues();
+        cu.put("club_id", club);
+        db.update(T_USERS, cu, "_id = ?", new String[]{String.valueOf(noam)});
+
+        long admin = insertUser(db, "מנהל המועדון", "admin@ptchess.co.il",
+                "Admin#2026", "+972500000001", Role.ADMIN, User.STATUS_ACTIVE, club);
+        long tutor = insertUser(db, "דוד לוי", "tutor@ptchess.co.il",
+                "Tutor#2026", "+972500000002", Role.TUTOR, User.STATUS_ACTIVE, club);
+        long child1 = insertUser(db, "יונתן כהן", "child@ptchess.co.il",
+                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE, club);
+        long child2 = insertUser(db, "מאיה פרץ", "maya@ptchess.co.il",
+                "Child#2026", null, Role.CHILD, User.STATUS_ACTIVE, club);
+        long parent = insertUser(db, "רונית כהן", "parent@ptchess.co.il",
+                "Parent#2026", "+972500000003", Role.PARENT, User.STATUS_ACTIVE, club);
+        insertUser(db, "איתי גולן", "pending@ptchess.co.il",
+                "Pending#2026", null, Role.CHILD, User.STATUS_PENDING, club);
+
         ContentValues pc = new ContentValues();
         pc.put("parent_id", parent);
         pc.put("child_id", child1);
         db.insert(T_PARENT_CHILD, null, pc);
 
-        // --- Groups ---
-        long gA = insertGroup(db, "קבוצה א׳ - מתחילים", 0, "17:00", tutor);   // Sunday
-        long gB = insertGroup(db, "קבוצה ב׳ - מתקדמים", 2, "18:00", tutor);   // Tuesday
+        long gA = insertGroup(db, club, "קבוצה א׳ - מתחילים", 0, "17:00", tutor);
+        long gB = insertGroup(db, club, "קבוצה ב׳ - מתקדמים", 2, "18:00", tutor);
         addMember(db, gA, child1);
         addMember(db, gA, child2);
         addMember(db, gB, child1);
 
-        // --- Puzzles (FEN + UCI solution) ---
-        insertPuzzle(db, "מט בתור אחד - שורה אחורית", 1,
+        insertPuzzle(db, club, "מט בתור אחד - שורה אחורית", 1,
                 "6k1/5ppp/8/8/8/8/8/R6K w - - 0 1", "a1a8", admin);
-        insertPuzzle(db, "מזלג פרש", 1,
+        insertPuzzle(db, club, "מזלג פרש", 1,
                 "r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1", "d5c7", admin);
-        insertPuzzle(db, "רגלי זוכה מלכה", 2,
+        insertPuzzle(db, club, "רגלי זוכה מלכה", 2,
                 "8/8/8/3q4/4P3/8/8/4K1k1 w - - 0 1", "e4d5", tutor);
-        insertPuzzle(db, "מט המלכה", 2,
+        insertPuzzle(db, club, "מט המלכה", 2,
                 "7k/8/6KQ/8/8/8/8/8 w - - 0 1", "h6h7", tutor);
-        insertPuzzle(db, "מט חנוק", 3,
+        insertPuzzle(db, club, "מט חנוק", 3,
                 "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1", "g5f7", admin);
-        insertPuzzle(db, "זכייה בצריח", 3,
+        insertPuzzle(db, club, "זכייה בצריח", 3,
                 "3r2k1/5ppp/8/8/8/8/8/3QK3 w - - 0 1", "d1d8", tutor);
 
-        // --- Library ---
-        insertBook(db, "אמנות הקומבינציה", "מקסים בלוך", "עברית",
+        insertBook(db, club, "אמנות הקומבינציה", "מקסים בלוך", "עברית",
                 "tactics", "BOTH", 1200, 1800, admin);
-        insertBook(db, "My System", "Aron Nimzowitsch", "English",
+        insertBook(db, club, "My System", "Aron Nimzowitsch", "English",
                 "strategy", "BOTH", 1600, 2200, admin);
-        insertBook(db, "התקפה על המלך", "יעקב נוידיטש", "עברית",
+        insertBook(db, club, "התקפה על המלך", "יעקב נוידיטש", "עברית",
                 "attack", "WHITE", 1400, 2000, tutor);
 
-        // --- News ---
-        insertNews(db, "פתיחת שנת הפעילות", "ברוכים הבאים למועדון השחמט פתח תקווה! "
+        insertNews(db, club, "פתיחת שנת הפעילות", "ברוכים הבאים למועדון השחמט פתח תקווה! "
                 + "האימונים מתחילים ביום ראשון הקרוב.", admin);
-        insertNews(db, "טורניר פנימי", "טורניר הבזק הפנימי יתקיים בסוף החודש. "
+        insertNews(db, club, "טורניר פנימי", "טורניר הבזק הפנימי יתקיים בסוף החודש. "
                 + "הרשמה אצל המאמנים.", admin);
 
-        // --- Tournament + results ---
-        long tourney = insertTournament(db, "אליפות פתח תקווה לנוער", "2026-06-01");
+        long tourney = insertTournament(db, club, "אליפות פתח תקווה לנוער", "2026-06-01");
         insertResult(db, tourney, child1, 4.5, 6, 3);
         insertResult(db, tourney, child2, 3.0, 6, 8);
 
-        // --- Assignment for group A ---
-        long assign = insertAssignment(db, gA, "תרגילי מט בשניים",
+        insertAssignment(db, club, gA, "תרגילי מט בשניים",
                 "פתרו את 10 התרגילים המצורפים והביאו למפגש הבא.", null, "2026-07-25", tutor);
-        // status rows created lazily when a student marks done
     }
 
-    private long insertGroup(SQLiteDatabase db, String name, int dayIndex, String time, long tutorId) {
+    private long insertGroup(SQLiteDatabase db, long clubId, String name,
+                             int dayIndex, String time, long tutorId) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("name", name);
         v.put("day_index", dayIndex);
         v.put("time", time);
@@ -244,9 +289,10 @@ public class DbHelper extends SQLiteOpenHelper {
         db.insert(T_GROUP_MEMBERS, null, v);
     }
 
-    private void insertPuzzle(SQLiteDatabase db, String title, int level,
+    private void insertPuzzle(SQLiteDatabase db, long clubId, String title, int level,
                               String fen, String sol, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("title", title);
         v.put("level", level);
         v.put("fen", fen);
@@ -255,9 +301,11 @@ public class DbHelper extends SQLiteOpenHelper {
         db.insert(T_PUZZLES, null, v);
     }
 
-    private void insertBook(SQLiteDatabase db, String title, String author, String lang,
-                            String category, String side, int rMin, int rMax, long by) {
+    private void insertBook(SQLiteDatabase db, long clubId, String title, String author,
+                            String lang, String category, String side,
+                            int rMin, int rMax, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("title", title);
         v.put("author", author);
         v.put("language", lang);
@@ -269,8 +317,9 @@ public class DbHelper extends SQLiteOpenHelper {
         db.insert(T_BOOKS, null, v);
     }
 
-    private void insertNews(SQLiteDatabase db, String title, String body, long by) {
+    private void insertNews(SQLiteDatabase db, long clubId, String title, String body, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("title", title);
         v.put("body", body);
         v.put("date", "2026-07-15");
@@ -278,8 +327,9 @@ public class DbHelper extends SQLiteOpenHelper {
         db.insert(T_NEWS, null, v);
     }
 
-    private long insertTournament(SQLiteDatabase db, String name, String date) {
+    private long insertTournament(SQLiteDatabase db, long clubId, String name, String date) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("name", name);
         v.put("date", date);
         return db.insert(T_TOURNAMENTS, null, v);
@@ -296,9 +346,10 @@ public class DbHelper extends SQLiteOpenHelper {
         db.insert(T_RESULTS, null, v);
     }
 
-    private long insertAssignment(SQLiteDatabase db, long groupId, String title,
+    private long insertAssignment(SQLiteDatabase db, long clubId, long groupId, String title,
                                   String desc, String fileUri, String due, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("group_id", groupId);
         v.put("title", title);
         v.put("description", desc);

@@ -157,7 +157,7 @@ public class AssignmentsFragment extends Fragment implements AssignmentAdapter.O
                     String uri = pickedUri;
                     ClubRepository repo = ClubRepository.getInstance(requireContext());
                     Async.io(() -> {
-                        repo.addAssignment(g.id, t, description, uri, dueDate, user.id);
+                        repo.addAssignment(user.clubId, g.id, t, description, uri, dueDate, user.id);
                         Async.main(this::load);
                     });
                 })

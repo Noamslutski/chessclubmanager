@@ -95,8 +95,9 @@ public class PuzzlesFragment extends Fragment {
 
     private void loadPuzzles() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
+        long clubId = ((MainActivity) requireActivity()).getCurrentUser().clubId;
         Async.io(() -> {
-            List<Puzzle> loaded = repo.getPuzzles();
+            List<Puzzle> loaded = repo.getPuzzles(clubId);
             Async.main(() -> {
                 if (!isAdded()) return;
                 allPuzzles = loaded;
@@ -177,7 +178,7 @@ public class PuzzlesFragment extends Fragment {
             int added = 0;
             for (LichessApi.RemotePuzzle rp : remote) {
                 if (rp.solutionUci == null || rp.solutionUci.isEmpty()) continue;
-                repo.addPuzzle(rp.title, rp.level, rp.fen, rp.solutionUci, user.id);
+                repo.addPuzzle(user.clubId, rp.title, rp.level, rp.fen, rp.solutionUci, user.id);
                 added++;
             }
             int finalAdded = added;
@@ -318,7 +319,8 @@ public class PuzzlesFragment extends Fragment {
                     }
                     ClubRepository repo = ClubRepository.getInstance(requireContext());
                     Async.io(() -> {
-                        repo.addPuzzle(t.isEmpty() ? getString(R.string.puzzles_title) : t,
+                        repo.addPuzzle(user.clubId,
+                                t.isEmpty() ? getString(R.string.puzzles_title) : t,
                                 lvl, fen, sol, user.id);
                         Async.main(this::loadPuzzles);
                     });
@@ -364,7 +366,7 @@ public class PuzzlesFragment extends Fragment {
             int added = 0;
             for (PgnImporter.ParsedPuzzle pp : parsed) {
                 if (pp.solutionUci == null || pp.solutionUci.isEmpty()) continue;
-                repo.addPuzzle(pp.title, 2, pp.fen, pp.solutionUci, user.id);
+                repo.addPuzzle(user.clubId, pp.title, 2, pp.fen, pp.solutionUci, user.id);
                 added++;
             }
             int finalAdded = added;

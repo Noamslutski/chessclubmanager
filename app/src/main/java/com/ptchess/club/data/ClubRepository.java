@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.AuthResult;
 import com.ptchess.club.data.model.Book;
+import com.ptchess.club.data.model.Club;
 import com.ptchess.club.data.model.Group;
 import com.ptchess.club.data.model.NewsItem;
 import com.ptchess.club.data.model.Puzzle;
@@ -57,7 +58,9 @@ public final class ClubRepository {
 
     /** Registration outcome. */
     public static class RegisterResult {
-        public enum Status { SUCCESS_PENDING, SUCCESS_PARENT, EMAIL_EXISTS, INVALID }
+        public enum Status {
+            SUCCESS_PENDING, SUCCESS_PARENT, SUCCESS_CLUB_CREATED, EMAIL_EXISTS, INVALID
+        }
         public final Status status;
         public final String linkedChildName; // set when SUCCESS_PARENT
         public RegisterResult(Status status, String linkedChildName) {
@@ -67,12 +70,16 @@ public final class ClubRepository {
     }
 
     /**
-     * Registers a new user. If valid child credentials are supplied the account
-     * is created as an active PARENT linked to that child; otherwise it is a
-     * CHILD pending admin approval.
+     * Registers a new user.
+     * <ul>
+     *   <li>Valid child credentials → active PARENT in the child's club.</li>
+     *   <li>A new club name → the user creates and owns that club as an active ADMIN.</li>
+     *   <li>Otherwise → a CHILD pending admin approval in the chosen existing club.</li>
+     * </ul>
      */
     public RegisterResult register(String fullName, String email, String password,
-                                   String phone, String childEmail, String childPassword) {
+                                   String phone, String childEmail, String childPassword,
+                                   long joinClubId, String newClubName) {
         String normEmail = InputValidator.normalizeEmail(email);
         if (!InputValidator.isValidName(fullName)
                 || !InputValidator.isValidEmail(normEmail)
@@ -83,17 +90,32 @@ public final class ClubRepository {
             return new RegisterResult(RegisterResult.Status.EMAIL_EXISTS, null);
         }
 
-        // Optional parent linking
+        // Optional parent linking (identity verified by the child's own credentials).
         User linkedChild = null;
         if (childEmail != null && !childEmail.trim().isEmpty()) {
             long childId = verifyChildCredentials(childEmail, childPassword);
-            if (childId > 0) {
-                linkedChild = getUserById(childId);
-            }
+            if (childId > 0) linkedChild = getUserById(childId);
         }
 
-        Role role = (linkedChild != null) ? Role.PARENT : Role.CHILD;
-        String status = (linkedChild != null) ? User.STATUS_ACTIVE : User.STATUS_PENDING;
+        boolean creatingClub = newClubName != null && !newClubName.trim().isEmpty();
+
+        long clubId;
+        Role role;
+        String status;
+        if (linkedChild != null) {
+            clubId = linkedChild.clubId;
+            role = Role.PARENT;
+            status = User.STATUS_ACTIVE;
+        } else if (creatingClub) {
+            clubId = 0; // set after the club row is created
+            role = Role.ADMIN;
+            status = User.STATUS_ACTIVE;
+        } else {
+            if (joinClubId <= 0) return new RegisterResult(RegisterResult.Status.INVALID, null);
+            clubId = joinClubId;
+            role = Role.CHILD;
+            status = User.STATUS_PENDING;
+        }
 
         ContentValues v = new ContentValues();
         v.put("full_name", InputValidator.sanitizeLine(fullName, InputValidator.MAX_NAME));
@@ -102,6 +124,7 @@ public final class ClubRepository {
         v.put("phone", InputValidator.sanitizeLine(phone, 30));
         v.put("role", role.name());
         v.put("status", status);
+        v.put("club_id", clubId);
         v.put("created_at", System.currentTimeMillis());
 
         long newId = helper.getWritableDatabase().insert(DbHelper.T_USERS, null, v);
@@ -109,6 +132,14 @@ public final class ClubRepository {
             return new RegisterResult(RegisterResult.Status.INVALID, null);
         }
 
+        if (creatingClub) {
+            long club = createClub(newClubName, newId, false);
+            ContentValues cu = new ContentValues();
+            cu.put("club_id", club);
+            helper.getWritableDatabase().update(DbHelper.T_USERS, cu,
+                    "_id = ?", new String[]{String.valueOf(newId)});
+            return new RegisterResult(RegisterResult.Status.SUCCESS_CLUB_CREATED, newClubName.trim());
+        }
         if (linkedChild != null) {
             linkParentToChild(newId, linkedChild.id);
             return new RegisterResult(RegisterResult.Status.SUCCESS_PARENT, linkedChild.fullName);
@@ -129,7 +160,7 @@ public final class ClubRepository {
         String hash = null;
         User user = null;
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status", "password_hash"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id", "password_hash"},
                 "email = ?", new String[]{normEmail}, null, null, null)) {
             if (c.moveToFirst()) {
                 user = readUser(c);
@@ -236,7 +267,7 @@ public final class ClubRepository {
     public User getUserById(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id"},
                 "_id = ?", new String[]{String.valueOf(id)}, null, null, null)) {
             return c.moveToFirst() ? readUser(c) : null;
         }
@@ -245,19 +276,28 @@ public final class ClubRepository {
     public User getUserByEmail(String email) {
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id"},
                 "email = ?", new String[]{InputValidator.normalizeEmail(email)},
                 null, null, null)) {
             return c.moveToFirst() ? readUser(c) : null;
         }
     }
 
-    public List<User> getPendingUsers() {
-        return queryUsers("status = ?", new String[]{User.STATUS_PENDING}, "created_at ASC");
+    public List<User> getPendingUsers(long clubId) {
+        return queryUsers("status = ? AND club_id = ?",
+                new String[]{User.STATUS_PENDING, String.valueOf(clubId)}, "created_at ASC");
     }
 
-    public List<User> getAllUsers() {
-        return queryUsers(null, null, "full_name ASC");
+    public List<User> getAllUsers(long clubId) {
+        return queryUsers("club_id = ?",
+                new String[]{String.valueOf(clubId)}, "full_name ASC");
+    }
+
+    /** Active members of a club with a given role (tutors / children pickers). */
+    public List<User> getClubUsersByRole(long clubId, Role role) {
+        return queryUsers("club_id = ? AND role = ? AND status = ?",
+                new String[]{String.valueOf(clubId), role.name(), User.STATUS_ACTIVE},
+                "full_name ASC");
     }
 
     public boolean approveUser(long id) {
@@ -286,7 +326,7 @@ public final class ClubRepository {
         List<User> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_USERS,
-                new String[]{"_id", "full_name", "email", "phone", "role", "status"},
+                new String[]{"_id", "full_name", "email", "phone", "role", "status", "club_id"},
                 where, args, null, null, order)) {
             while (c.moveToNext()) out.add(readUser(c));
         }
@@ -300,7 +340,8 @@ public final class ClubRepository {
                 c.getString(c.getColumnIndexOrThrow("email")),
                 c.getString(c.getColumnIndexOrThrow("phone")),
                 Role.fromName(c.getString(c.getColumnIndexOrThrow("role"))),
-                c.getString(c.getColumnIndexOrThrow("status")));
+                c.getString(c.getColumnIndexOrThrow("status")),
+                c.getLong(c.getColumnIndexOrThrow("club_id")));
     }
 
     // ============================================================ PARENT / CHILD
@@ -325,7 +366,7 @@ public final class ClubRepository {
     public List<User> getChildrenForParent(long parentId) {
         List<User> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
-        String sql = "SELECT u._id, u.full_name, u.email, u.phone, u.role, u.status "
+        String sql = "SELECT u._id, u.full_name, u.email, u.phone, u.role, u.status, u.club_id "
                 + "FROM " + DbHelper.T_USERS + " u "
                 + "JOIN " + DbHelper.T_PARENT_CHILD + " pc ON pc.child_id = u._id "
                 + "WHERE pc.parent_id = ? ORDER BY u.full_name";
@@ -350,7 +391,7 @@ public final class ClubRepository {
     public List<Group> getGroupsForUser(User user) {
         switch (user.role) {
             case ADMIN:
-                return queryGroups(null, null);
+                return queryGroups("g.club_id = ?", new String[]{String.valueOf(user.clubId)});
             case TUTOR:
                 return queryGroups("g.tutor_id = ?", new String[]{String.valueOf(user.id)});
             case CHILD:
@@ -396,7 +437,7 @@ public final class ClubRepository {
     public List<User> getGroupMembers(long groupId) {
         List<User> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
-        String sql = "SELECT u._id, u.full_name, u.email, u.phone, u.role, u.status "
+        String sql = "SELECT u._id, u.full_name, u.email, u.phone, u.role, u.status, u.club_id "
                 + "FROM " + DbHelper.T_USERS + " u "
                 + "JOIN " + DbHelper.T_GROUP_MEMBERS + " gm ON gm.child_id = u._id "
                 + "WHERE gm.group_id = ? ORDER BY u.full_name";
@@ -408,12 +449,13 @@ public final class ClubRepository {
 
     // ============================================================ PUZZLES
 
-    public List<Puzzle> getPuzzles() {
+    public List<Puzzle> getPuzzles(long clubId) {
         List<Puzzle> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_PUZZLES,
                 new String[]{"_id", "title", "level", "fen", "solution_uci"},
-                null, null, null, null, "level ASC, _id ASC")) {
+                "club_id = ?", new String[]{String.valueOf(clubId)},
+                null, null, "level ASC, _id ASC")) {
             while (c.moveToNext()) {
                 out.add(new Puzzle(c.getLong(0), c.getString(1), c.getInt(2),
                         c.getString(3), c.getString(4)));
@@ -422,8 +464,10 @@ public final class ClubRepository {
         return out;
     }
 
-    public long addPuzzle(String title, int level, String fen, String solutionUci, long by) {
+    public long addPuzzle(long clubId, String title, int level,
+                          String fen, String solutionUci, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("title", InputValidator.sanitizeLine(title, 120));
         v.put("level", level);
         v.put("fen", fen);
@@ -434,13 +478,14 @@ public final class ClubRepository {
 
     // ============================================================ LIBRARY
 
-    public List<Book> getBooks() {
+    public List<Book> getBooks(long clubId) {
         List<Book> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_BOOKS,
                 new String[]{"_id", "title", "author", "language", "category",
                         "side", "rating_min", "rating_max", "file_uri"},
-                null, null, null, null, "title ASC")) {
+                "club_id = ?", new String[]{String.valueOf(clubId)},
+                null, null, "title ASC")) {
             while (c.moveToNext()) {
                 out.add(new Book(c.getLong(0), c.getString(1), c.getString(2),
                         c.getString(3), c.getString(4), c.getString(5),
@@ -450,9 +495,10 @@ public final class ClubRepository {
         return out;
     }
 
-    public long addBook(String title, String author, String language, String category,
+    public long addBook(long clubId, String title, String author, String language, String category,
                         String side, int rMin, int rMax, String fileUri, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("title", InputValidator.sanitizeLine(title, 120));
         v.put("author", InputValidator.sanitizeLine(author, 80));
         v.put("language", InputValidator.sanitizeLine(language, 40));
@@ -473,7 +519,8 @@ public final class ClubRepository {
 
         switch (user.role) {
             case ADMIN:
-                return queryAssignments(null, null, -1);
+                return queryAssignments("a.club_id = ?",
+                        new String[]{String.valueOf(user.clubId)}, -1);
             case TUTOR:
                 return queryAssignments("a.group_id IN (SELECT _id FROM " + DbHelper.T_GROUPS
                         + " WHERE tutor_id = ?)", new String[]{String.valueOf(user.id)}, -1);
@@ -543,9 +590,10 @@ public final class ClubRepository {
                 DbHelper.T_ASSIGN_STATUS, null, v, SQLiteDatabase.CONFLICT_REPLACE);
     }
 
-    public long addAssignment(long groupId, String title, String description,
+    public long addAssignment(long clubId, long groupId, String title, String description,
                               String fileUri, String dueDate, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("group_id", groupId);
         v.put("title", InputValidator.sanitizeLine(title, 120));
         v.put("description", InputValidator.sanitizeText(description));
@@ -561,7 +609,9 @@ public final class ClubRepository {
     public List<TournamentResult> getResultsForUser(User user) {
         switch (user.role) {
             case ADMIN:
-                return queryResults(null, null);
+                return queryResults(
+                        "r.child_id IN (SELECT _id FROM " + DbHelper.T_USERS + " WHERE club_id = ?)",
+                        new String[]{String.valueOf(user.clubId)});
             case CHILD:
                 return queryResults("r.child_id = ?", new String[]{String.valueOf(user.id)});
             case PARENT: {
@@ -601,14 +651,16 @@ public final class ClubRepository {
         return out;
     }
 
-    /** Finds a tournament by name+date, creating it if needed. Returns its id. */
-    public long addOrGetTournament(String name, String date) {
+    /** Finds a club tournament by name+date, creating it if needed. Returns its id. */
+    public long addOrGetTournament(long clubId, String name, String date) {
         SQLiteDatabase db = helper.getWritableDatabase();
         try (Cursor c = db.query(DbHelper.T_TOURNAMENTS, new String[]{"_id"},
-                "name = ? AND date = ?", new String[]{name, date}, null, null, null)) {
+                "club_id = ? AND name = ? AND date = ?",
+                new String[]{String.valueOf(clubId), name, date}, null, null, null)) {
             if (c.moveToFirst()) return c.getLong(0);
         }
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("name", InputValidator.sanitizeLine(name, 120));
         v.put("date", InputValidator.sanitizeLine(date, 20));
         return db.insert(DbHelper.T_TOURNAMENTS, null, v);
@@ -630,7 +682,7 @@ public final class ClubRepository {
      * Rows whose email does not match a registered user are skipped.
      * Returns the number of results inserted.
      */
-    public int importResultsCsv(String csv) {
+    public int importResultsCsv(long clubId, String csv) {
         if (csv == null || csv.trim().isEmpty()) return 0;
         int added = 0;
         for (String rawLine : csv.split("\\r?\\n")) {
@@ -641,14 +693,14 @@ public final class ClubRepository {
             String email = InputValidator.normalizeEmail(cols[0].trim());
             if (!InputValidator.isValidEmail(email)) continue; // skips header row too
             User child = getUserByEmail(email);
-            if (child == null) continue;
+            if (child == null || child.clubId != clubId) continue; // stay within the club
             try {
                 String tournament = cols[1].trim();
                 String date = cols[2].trim();
                 double points = Double.parseDouble(cols[3].trim());
                 int games = Integer.parseInt(cols[4].trim());
                 int standing = Integer.parseInt(cols[5].trim());
-                long tId = addOrGetTournament(tournament, date);
+                long tId = addOrGetTournament(clubId, tournament, date);
                 addResult(tId, child.id, points, games, standing);
                 added++;
             } catch (NumberFormatException ignored) {
@@ -660,14 +712,14 @@ public final class ClubRepository {
 
     // ============================================================ NEWS
 
-    public List<NewsItem> getNews() {
+    public List<NewsItem> getNews(long clubId) {
         List<NewsItem> out = new ArrayList<>();
         SQLiteDatabase db = helper.getReadableDatabase();
         String sql = "SELECT n._id, n.title, n.body, n.date, COALESCE(u.full_name,'') "
                 + "FROM " + DbHelper.T_NEWS + " n "
                 + "LEFT JOIN " + DbHelper.T_USERS + " u ON u._id = n.created_by "
-                + "ORDER BY n._id DESC";
-        try (Cursor c = db.rawQuery(sql, null)) {
+                + "WHERE n.club_id = ? ORDER BY n._id DESC";
+        try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(clubId)})) {
             while (c.moveToNext()) {
                 out.add(new NewsItem(c.getLong(0), c.getString(1), c.getString(2),
                         c.getString(3), c.getString(4)));
@@ -676,8 +728,9 @@ public final class ClubRepository {
         return out;
     }
 
-    public long addNews(String title, String body, long by) {
+    public long addNews(long clubId, String title, String body, long by) {
         ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
         v.put("title", InputValidator.sanitizeLine(title, 120));
         v.put("body", InputValidator.sanitizeText(body));
         v.put("date", java.text.DateFormat.getDateInstance().format(new java.util.Date()));
@@ -689,7 +742,7 @@ public final class ClubRepository {
 
     public User getPrimaryTutorForChild(long childId) {
         SQLiteDatabase db = helper.getReadableDatabase();
-        String sql = "SELECT u._id, u.full_name, u.email, u.phone, u.role, u.status "
+        String sql = "SELECT u._id, u.full_name, u.email, u.phone, u.role, u.status, u.club_id "
                 + "FROM " + DbHelper.T_USERS + " u "
                 + "JOIN " + DbHelper.T_GROUPS + " g ON g.tutor_id = u._id "
                 + "JOIN " + DbHelper.T_GROUP_MEMBERS + " gm ON gm.group_id = g._id "
@@ -703,6 +756,124 @@ public final class ClubRepository {
         List<User> admins = queryUsers("role = ? AND status = ?",
                 new String[]{Role.ADMIN.name(), User.STATUS_ACTIVE}, "_id ASC");
         return admins.isEmpty() ? null : admins.get(0);
+    }
+
+    /** An active admin of the given club (for parent contact). */
+    public User getClubAdmin(long clubId) {
+        List<User> admins = queryUsers("role = ? AND status = ? AND club_id = ?",
+                new String[]{Role.ADMIN.name(), User.STATUS_ACTIVE, String.valueOf(clubId)},
+                "_id ASC");
+        return admins.isEmpty() ? null : admins.get(0);
+    }
+
+    // ============================================================ CLUBS
+
+    public static boolean isSuperAdmin(User user) {
+        return user != null && user.email != null
+                && user.email.equalsIgnoreCase(DbHelper.SUPER_ADMIN_EMAIL);
+    }
+
+    public long createClub(String name, long ownerId, boolean verified) {
+        ContentValues v = new ContentValues();
+        v.put("name", InputValidator.sanitizeLine(name, 80));
+        v.put("owner_id", ownerId);
+        v.put("verified", verified ? 1 : 0);
+        v.put("created_at", System.currentTimeMillis());
+        return helper.getWritableDatabase().insert(DbHelper.T_CLUBS, null, v);
+    }
+
+    public List<Club> getClubs() {
+        return queryClubs(null, null);
+    }
+
+    public List<Club> getUnverifiedClubs() {
+        return queryClubs("c.verified = 0", null);
+    }
+
+    public Club getClub(long clubId) {
+        List<Club> clubs = queryClubs("c._id = ?", new String[]{String.valueOf(clubId)});
+        return clubs.isEmpty() ? null : clubs.get(0);
+    }
+
+    public boolean isClubVerified(long clubId) {
+        Club c = getClub(clubId);
+        return c != null && c.verified;
+    }
+
+    public boolean setClubVerified(long clubId, boolean verified) {
+        ContentValues v = new ContentValues();
+        v.put("verified", verified ? 1 : 0);
+        return helper.getWritableDatabase().update(DbHelper.T_CLUBS, v,
+                "_id = ?", new String[]{String.valueOf(clubId)}) > 0;
+    }
+
+    private List<Club> queryClubs(String where, String[] args) {
+        List<Club> out = new ArrayList<>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+        StringBuilder sql = new StringBuilder(
+                "SELECT c._id, c.name, c.owner_id, COALESCE(u.full_name,''), c.verified "
+                        + "FROM " + DbHelper.T_CLUBS + " c "
+                        + "LEFT JOIN " + DbHelper.T_USERS + " u ON u._id = c.owner_id ");
+        if (where != null) sql.append("WHERE ").append(where).append(' ');
+        sql.append("ORDER BY c.name");
+        try (Cursor c = db.rawQuery(sql.toString(), args)) {
+            while (c.moveToNext()) {
+                out.add(new Club(c.getLong(0), c.getString(1), c.getLong(2),
+                        c.getString(3), c.getInt(4) == 1));
+            }
+        }
+        return out;
+    }
+
+    // ============================================================ GROUP MANAGEMENT
+
+    public long addGroup(long clubId, String name, int dayIndex, String time, long tutorId) {
+        ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
+        v.put("name", InputValidator.sanitizeLine(name, 80));
+        v.put("day_index", dayIndex);
+        v.put("time", InputValidator.sanitizeLine(time, 10));
+        v.put("tutor_id", tutorId);
+        return helper.getWritableDatabase().insert(DbHelper.T_GROUPS, null, v);
+    }
+
+    public void addGroupMember(long groupId, long childId) {
+        ContentValues v = new ContentValues();
+        v.put("group_id", groupId);
+        v.put("child_id", childId);
+        helper.getWritableDatabase().insertWithOnConflict(
+                DbHelper.T_GROUP_MEMBERS, null, v, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
+    // ============================================================ PLAYERS (roster)
+
+    /** Adds a federation player to a club, deduped per club by external id. */
+    public boolean addPlayer(long clubId, String externalId, String name, int rating, String fed) {
+        ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
+        v.put("external_id", externalId);
+        v.put("full_name", InputValidator.sanitizeLine(name, InputValidator.MAX_NAME));
+        v.put("rating", rating);
+        v.put("federation", InputValidator.sanitizeLine(fed, 10));
+        long id = helper.getWritableDatabase().insertWithOnConflict(
+                DbHelper.T_PLAYERS, null, v, SQLiteDatabase.CONFLICT_IGNORE);
+        return id > 0; // -1 when the (club_id, external_id) pair already exists
+    }
+
+    public List<com.ptchess.club.data.model.Player> getPlayers(long clubId) {
+        List<com.ptchess.club.data.model.Player> out = new ArrayList<>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+        try (Cursor c = db.query(DbHelper.T_PLAYERS,
+                new String[]{"_id", "external_id", "full_name", "rating", "federation"},
+                "club_id = ?", new String[]{String.valueOf(clubId)},
+                null, null, "rating DESC, full_name ASC")) {
+            while (c.moveToNext()) {
+                out.add(new com.ptchess.club.data.model.Player(
+                        c.getLong(0), c.getString(1), c.getString(2),
+                        c.getInt(3), c.getString(4)));
+            }
+        }
+        return out;
     }
 
     // ============================================================ helpers

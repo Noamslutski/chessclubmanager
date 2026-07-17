@@ -92,8 +92,9 @@ public class HomeFragment extends Fragment {
 
     private void loadNews() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
+        long clubId = ((MainActivity) requireActivity()).getCurrentUser().clubId;
         Async.io(() -> {
-            List<NewsItem> news = repo.getNews();
+            List<NewsItem> news = repo.getNews(clubId);
             Async.main(() -> {
                 if (!isAdded()) return;
                 recycler.setAdapter(new NewsAdapter(news));
@@ -120,7 +121,7 @@ public class HomeFragment extends Fragment {
                     if (t.isEmpty()) return;
                     ClubRepository repo = ClubRepository.getInstance(requireContext());
                     Async.io(() -> {
-                        repo.addNews(t, b, user.id);
+                        repo.addNews(user.clubId, t, b, user.id);
                         Async.main(this::loadNews);
                     });
                 })

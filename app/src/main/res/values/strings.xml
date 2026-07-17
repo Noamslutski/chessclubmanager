@@ -21,6 +21,12 @@
     <string name="sign_in">כניסה</string>
     <string name="create_account">יצירת חשבון</string>
     <string name="send_reset_link">שליחת קישור לאיפוס</string>
+    <string name="club">מועדון</string>
+    <string name="choose_club">בחר מועדון</string>
+    <string name="create_new_club">➕ יצירת מועדון חדש…</string>
+    <string name="club_name">שם המועדון</string>
+    <string name="msg_club_created">המועדון \"%1$s\" נוצר! אתה מנהל המועדון.</string>
+    <string name="err_club_required">בחר מועדון קיים או צור מועדון חדש</string>
     <string name="link_child_optional">קישור לחשבון ילד (לא חובה)</string>
     <string name="link_child_help">אם תזין דוא״ל וסיסמה של ילד רשום, תקבל הרשאות הורה עבורו.</string>
     <string name="child_email">דוא״ל הילד</string>
@@ -70,6 +76,12 @@
     <string name="group_when">%1$s בשעה %2$s</string>
     <string name="group_members">חניכים: %1$d</string>
     <string name="no_groups">לא נמצאו קבוצות.</string>
+    <string name="add_group">הוספת קבוצה</string>
+    <string name="group_name_hint">שם הקבוצה</string>
+    <string name="day">יום</string>
+    <string name="add_member">הוספת חניך</string>
+    <string name="no_tutors">אין מאמנים במועדון. קדם משתמש לתפקיד מאמן קודם.</string>
+    <string name="members_added">נוספו %1$d חניכים</string>
 
     <!-- Puzzles -->
     <string name="puzzles_title">תרגילי שחמט</string>
