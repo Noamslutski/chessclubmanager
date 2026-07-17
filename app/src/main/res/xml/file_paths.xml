@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Used by FileProvider to share library PDFs / assignment files for open & print. -->
+    <files-path name="library" path="library/" />
+    <files-path name="assignments" path="assignments/" />
+    <cache-path name="shared" path="shared/" />
+</paths>

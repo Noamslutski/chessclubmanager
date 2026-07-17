@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Never back up the local credential database or encrypted session prefs. -->
+<full-backup-content>
+    <exclude domain="database" path="ptchess.db" />
+    <exclude domain="sharedpref" path="ptchess_secure_session.xml" />
+</full-backup-content>

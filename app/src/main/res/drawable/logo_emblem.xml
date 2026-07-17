@@ -1,0 +1,38 @@
+<!--
+  Placeholder club emblem: a gold chess king on a blue/black shield.
+  To use your real logo: replace this file with your artwork, or add a PNG
+  named logo_emblem.png into res/drawable/ and reference @drawable/logo_emblem.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Rounded shield background -->
+    <path
+        android:pathData="M20,8 L100,8 A12,12 0 0 1 112,20 L112,84 A20,20 0 0 1 100,102 L60,116 L20,102 A20,20 0 0 1 8,84 L8,20 A12,12 0 0 1 20,8 Z"
+        android:fillColor="#0C121D" />
+    <path
+        android:pathData="M20,8 L100,8 A12,12 0 0 1 112,20 L112,84 A20,20 0 0 1 100,102 L60,116 L20,102 A20,20 0 0 1 8,84 L8,20 A12,12 0 0 1 20,8 Z"
+        android:strokeColor="#2B6EE0"
+        android:strokeWidth="3"
+        android:fillColor="#00000000" />
+
+    <!-- Inner glow ring -->
+    <path
+        android:pathData="M60,22 A30,30 0 1 0 60.01,22 Z"
+        android:strokeColor="#1B4DA8"
+        android:strokeWidth="2"
+        android:fillColor="#00000000" />
+
+    <!-- King: cross -->
+    <path android:pathData="M56,26 h8 v8 h8 v8 h-8 v8 h-8 v-8 h-8 v-8 h8 z" android:fillColor="#E7B04A" />
+    <!-- King: head ball -->
+    <path android:pathData="M60,52 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" android:fillColor="#E7B04A" />
+    <!-- King: body -->
+    <path android:pathData="M48,62 C44,74 46,82 60,82 C74,82 76,74 72,62 C68,70 52,70 48,62 Z" android:fillColor="#F3D08A" />
+    <!-- King: base -->
+    <path android:pathData="M44,86 h32 l-4,10 h-24 z" android:fillColor="#E7B04A" />
+    <path android:pathData="M46,82 h28 v5 h-28 z" android:fillColor="#F3D08A" />
+</vector>

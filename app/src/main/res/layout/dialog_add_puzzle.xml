@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/puzzleTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/puzzles_title"
+        android:maxLength="120"
+        android:inputType="text"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_muted"
+        android:importantForAutofill="no" />
+
+    <EditText
+        android:id="@+id/puzzleLevel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="1-3"
+        android:inputType="number"
+        android:maxLength="1"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_muted"
+        android:importantForAutofill="no" />
+
+    <EditText
+        android:id="@+id/puzzleFen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="FEN"
+        android:inputType="text"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_muted"
+        android:importantForAutofill="no" />
+
+    <EditText
+        android:id="@+id/puzzleSolution"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="e2e4 e7e5 ..."
+        android:inputType="text"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_muted"
+        android:importantForAutofill="no" />
+</LinearLayout>

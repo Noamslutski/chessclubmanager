@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Core blue + black brand palette -->
+    <color name="black_900">#FF060910</color>       <!-- deepest background -->
+    <color name="black_800">#FF0C121D</color>       <!-- app background -->
+    <color name="surface_800">#FF141C2B</color>     <!-- cards / surfaces -->
+    <color name="surface_700">#FF1C2740</color>     <!-- elevated surface -->
+    <color name="stroke_600">#FF283656</color>      <!-- hairline borders -->
+
+    <color name="blue_primary">#FF2B6EE0</color>    <!-- royal blue (primary) -->
+    <color name="blue_primary_dark">#FF1B4DA8</color>
+    <color name="blue_light">#FF5B9DF9</color>      <!-- accent / links -->
+    <color name="blue_glow">#333B82F6</color>       <!-- translucent glow -->
+
+    <!-- Warm accent so the app still feels inviting -->
+    <color name="gold_accent">#FFE7B04A</color>
+    <color name="gold_soft">#FFF3D08A</color>
+
+    <color name="text_primary">#FFF3F6FB</color>
+    <color name="text_secondary">#FFA9B6CB</color>
+    <color name="text_muted">#FF6E7C93</color>
+
+    <color name="success">#FF3FBF7F</color>
+    <color name="warning">#FFE7B04A</color>
+    <color name="danger">#FFE5566B</color>
+
+    <color name="white">#FFFFFFFF</color>
+    <color name="board_light">#FFE9EDF4</color>
+    <color name="board_dark">#FF3D5A96</color>
+    <color name="board_highlight">#88E7B04A</color>
+    <color name="board_move_dot">#992B6EE0</color>
+</resources>

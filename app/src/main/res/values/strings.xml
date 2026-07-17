@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default locale = Hebrew. English lives in values-en/strings.xml. -->
+    <string name="app_name">מועדון השחמט פ״ת</string>
+    <string name="club_full_name">מועדון השחמט פתח תקווה</string>
+    <string name="tagline">חושבים כמה צעדים קדימה</string>
+
+    <!-- Auth -->
+    <string name="login">התחברות</string>
+    <string name="register">הרשמה</string>
+    <string name="logout">התנתקות</string>
+    <string name="email">דוא״ל</string>
+    <string name="password">סיסמה</string>
+    <string name="confirm_password">אימות סיסמה</string>
+    <string name="full_name">שם מלא</string>
+    <string name="phone">טלפון</string>
+    <string name="forgot_password">שכחתי סיסמה</string>
+    <string name="reset_password">איפוס סיסמה</string>
+    <string name="no_account">אין לך חשבון? הירשם</string>
+    <string name="have_account">כבר יש לך חשבון? התחבר</string>
+    <string name="sign_in">כניסה</string>
+    <string name="create_account">יצירת חשבון</string>
+    <string name="send_reset_link">שליחת קישור לאיפוס</string>
+    <string name="link_child_optional">קישור לחשבון ילד (לא חובה)</string>
+    <string name="link_child_help">אם תזין דוא״ל וסיסמה של ילד רשום, תקבל הרשאות הורה עבורו.</string>
+    <string name="child_email">דוא״ל הילד</string>
+    <string name="child_password">סיסמת הילד</string>
+
+    <!-- Validation / security messages -->
+    <string name="err_required">שדה חובה</string>
+    <string name="err_email_invalid">כתובת דוא״ל לא תקינה</string>
+    <string name="err_password_weak">הסיסמה חייבת לכלול לפחות 8 תווים, אות וספרה</string>
+    <string name="err_passwords_mismatch">הסיסמאות אינן תואמות</string>
+    <string name="err_login_failed">דוא״ל או סיסמה שגויים</string>
+    <string name="err_email_exists">כתובת הדוא״ל כבר רשומה</string>
+    <string name="err_account_pending">החשבון ממתין לאישור מנהל</string>
+    <string name="err_account_rejected">הבקשה נדחתה. פנה למנהל המועדון.</string>
+    <string name="err_too_many_attempts">יותר מדי נסיונות. נסה שוב בעוד %1$d דקות.</string>
+    <string name="msg_register_pending">ההרשמה נקלטה! חשבונך ימתין לאישור מנהל המועדון.</string>
+    <string name="msg_reset_sent">אם הכתובת רשומה, יישלח אליה קישור לאיפוס.</string>
+    <string name="msg_parent_linked">קושרת בהצלחה כהורה של %1$s</string>
+
+    <!-- Roles -->
+    <string name="role_admin">מנהל</string>
+    <string name="role_tutor">מאמן</string>
+    <string name="role_parent">הורה</string>
+    <string name="role_child">חניך</string>
+
+    <!-- Navigation / sections -->
+    <string name="nav_home">בית</string>
+    <string name="nav_groups">קבוצות</string>
+    <string name="nav_puzzles">תרגילים</string>
+    <string name="nav_library">ספרייה</string>
+    <string name="nav_more">עוד</string>
+    <string name="nav_admin">ניהול</string>
+    <string name="nav_assignments">מטלות</string>
+    <string name="nav_tournaments">תוצאות טורנירים</string>
+    <string name="nav_children">הילדים שלי</string>
+    <string name="nav_settings">הגדרות</string>
+
+    <!-- Home / news -->
+    <string name="home_welcome">שלום, %1$s</string>
+    <string name="home_news">חדשות המועדון</string>
+    <string name="no_news">אין עדכונים חדשים כרגע.</string>
+    <string name="add_news">הוספת עדכון</string>
+
+    <!-- Groups -->
+    <string name="my_groups">הקבוצות שלי</string>
+    <string name="group_tutor">מאמן: %1$s</string>
+    <string name="group_when">%1$s בשעה %2$s</string>
+    <string name="group_members">חניכים: %1$d</string>
+    <string name="no_groups">לא נמצאו קבוצות.</string>
+
+    <!-- Puzzles -->
+    <string name="puzzles_title">תרגילי שחמט</string>
+    <string name="puzzle_level">רמה %1$d</string>
+    <string name="puzzle_white_to_move">הלבן מתחיל</string>
+    <string name="puzzle_black_to_move">השחור מתחיל</string>
+    <string name="puzzle_correct">כל הכבוד! פתרת נכון 🎉</string>
+    <string name="puzzle_wrong">לא מדויק, נסה שוב</string>
+    <string name="puzzle_hint">רמז</string>
+    <string name="puzzle_reset">אתחול</string>
+    <string name="puzzle_next">התרגיל הבא</string>
+    <string name="import_pgn">ייבוא PGN</string>
+    <string name="import_lichess">ייבוא מ־Lichess</string>
+
+    <!-- Library -->
+    <string name="library_title">ספריית המועדון</string>
+    <string name="add_book">הוספת ספר</string>
+    <string name="book_author">מחבר</string>
+    <string name="book_language">שפה</string>
+    <string name="book_category">קטגוריה</string>
+    <string name="book_rating_range">טווח דירוג</string>
+    <string name="book_side">צבע</string>
+    <string name="side_white">לבן</string>
+    <string name="side_black">שחור</string>
+    <string name="side_both">שניהם</string>
+    <string name="cat_opening">פתיחות</string>
+    <string name="cat_attack">התקפה</string>
+    <string name="cat_defense">הגנה</string>
+    <string name="cat_endgame">סופים</string>
+    <string name="cat_psychology">פסיכולוגיה</string>
+    <string name="cat_strategy">אסטרטגיה</string>
+    <string name="cat_tactics">טקטיקה</string>
+    <string name="print_book">הדפסה</string>
+    <string name="open_book">פתיחה</string>
+    <string name="upload_pdf">העלאת קובץ PDF</string>
+
+    <!-- Assignments / homework -->
+    <string name="assignments_title">מטלות ושיעורי בית</string>
+    <string name="new_assignment">מטלה חדשה</string>
+    <string name="assignment_due">להגשה עד: %1$s</string>
+    <string name="assignment_done">סמן כהושלם</string>
+    <string name="assignment_completed">הושלם ✓</string>
+    <string name="attach_file">צירוף קובץ (PDF / PGN / טקסט)</string>
+    <string name="new_assignment_popup">מטלה חדשה ממתינה לך!</string>
+
+    <!-- Tournaments -->
+    <string name="tournaments_title">תוצאות טורנירים</string>
+    <string name="tournament_points">%1$s נק׳ מתוך %2$d משחקים</string>
+    <string name="tournament_standing">מקום %1$d</string>
+    <string name="import_results">ייבוא תוצאות</string>
+    <string name="no_results">לא נמצאו תוצאות.</string>
+
+    <!-- Admin -->
+    <string name="admin_title">מרכז הניהול</string>
+    <string name="pending_approvals">בקשות הרשמה ממתינות</string>
+    <string name="manage_users">ניהול משתמשים</string>
+    <string name="manage_groups">ניהול קבוצות</string>
+    <string name="approve">אישור</string>
+    <string name="reject">דחייה</string>
+    <string name="promote">קידום לתפקיד</string>
+    <string name="set_role">קביעת תפקיד</string>
+    <string name="no_pending">אין בקשות ממתינות.</string>
+    <string name="user_status_pending">ממתין</string>
+    <string name="user_status_active">פעיל</string>
+
+    <!-- Parent -->
+    <string name="my_children">הילדים שלי</string>
+    <string name="add_child">הוספת ילד</string>
+    <string name="contact_tutor">יצירת קשר עם המאמן</string>
+    <string name="contact_admin">יצירת קשר עם המנהל</string>
+    <string name="call">התקשרות</string>
+    <string name="whatsapp">וואטסאפ</string>
+
+    <!-- Settings -->
+    <string name="language">שפה</string>
+    <string name="lang_hebrew">עברית</string>
+    <string name="lang_english">English</string>
+    <string name="account">חשבון</string>
+    <string name="change_password">שינוי סיסמה</string>
+    <string name="security_note">כל הסיסמאות נשמרות מוצפנות. הגישה מבוססת תפקידים.</string>
+
+    <!-- Generic -->
+    <string name="save">שמירה</string>
+    <string name="cancel">ביטול</string>
+    <string name="delete">מחיקה</string>
+    <string name="close">סגירה</string>
+    <string name="ok">אישור</string>
+    <string name="search">חיפוש</string>
+    <string name="loading">טוען…</string>
+    <string name="coming_soon">בפיתוח — יחובר לשרת המועדון.</string>
+
+    <string-array name="weekdays">
+        <item>יום ראשון</item>
+        <item>יום שני</item>
+        <item>יום שלישי</item>
+        <item>יום רביעי</item>
+        <item>יום חמישי</item>
+        <item>יום שישי</item>
+        <item>שבת</item>
+    </string-array>
+</resources>
