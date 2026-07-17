@@ -16,15 +16,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.NewsItem;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.util.Async;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HomeFragment extends Fragment {
+
+    // Shown at most once per app process so students/parents aren't nagged.
+    private static boolean assignmentPopupShown = false;
 
     private RecyclerView recycler;
     private TextView emptyView;
@@ -56,6 +61,33 @@ public class HomeFragment extends Fragment {
         }
 
         loadNews();
+        maybeShowAssignmentPopup(user);
+    }
+
+    /** Students/parents get a heads-up popup about outstanding assignments. */
+    private void maybeShowAssignmentPopup(User user) {
+        if (assignmentPopupShown) return;
+        if (user.role != Role.CHILD && user.role != Role.PARENT) return;
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
+            List<Assignment> all = repo.getAssignmentsForUser(user);
+            List<String> pending = new ArrayList<>();
+            for (Assignment a : all) {
+                // A student sees only unfinished ones; a parent sees them all.
+                if (user.role != Role.CHILD || !a.completed) pending.add(a.title);
+            }
+            Async.main(() -> {
+                if (!isAdded() || assignmentPopupShown || pending.isEmpty()) return;
+                assignmentPopupShown = true;
+                StringBuilder sb = new StringBuilder();
+                for (String t : pending) sb.append("• ").append(t).append('\n');
+                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.new_assignment_popup)
+                        .setMessage(sb.toString().trim())
+                        .setPositiveButton(R.string.ok, null)
+                        .show();
+            });
+        });
     }
 
     private void loadNews() {

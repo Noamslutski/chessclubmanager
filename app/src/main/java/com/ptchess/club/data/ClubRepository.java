@@ -601,6 +601,63 @@ public final class ClubRepository {
         return out;
     }
 
+    /** Finds a tournament by name+date, creating it if needed. Returns its id. */
+    public long addOrGetTournament(String name, String date) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        try (Cursor c = db.query(DbHelper.T_TOURNAMENTS, new String[]{"_id"},
+                "name = ? AND date = ?", new String[]{name, date}, null, null, null)) {
+            if (c.moveToFirst()) return c.getLong(0);
+        }
+        ContentValues v = new ContentValues();
+        v.put("name", InputValidator.sanitizeLine(name, 120));
+        v.put("date", InputValidator.sanitizeLine(date, 20));
+        return db.insert(DbHelper.T_TOURNAMENTS, null, v);
+    }
+
+    public long addResult(long tournamentId, long childId, double points, int games, int standing) {
+        ContentValues v = new ContentValues();
+        v.put("tournament_id", tournamentId);
+        v.put("child_id", childId);
+        v.put("points", points);
+        v.put("games", games);
+        v.put("standing", standing);
+        return helper.getWritableDatabase().insert(DbHelper.T_RESULTS, null, v);
+    }
+
+    /**
+     * Imports tournament results from CSV text. Expected columns (header row
+     * optional): child_email, tournament, date, points, games, standing.
+     * Rows whose email does not match a registered user are skipped.
+     * Returns the number of results inserted.
+     */
+    public int importResultsCsv(String csv) {
+        if (csv == null || csv.trim().isEmpty()) return 0;
+        int added = 0;
+        for (String rawLine : csv.split("\\r?\\n")) {
+            String line = rawLine.trim();
+            if (line.isEmpty()) continue;
+            String[] cols = line.split(",");
+            if (cols.length < 6) continue;
+            String email = InputValidator.normalizeEmail(cols[0].trim());
+            if (!InputValidator.isValidEmail(email)) continue; // skips header row too
+            User child = getUserByEmail(email);
+            if (child == null) continue;
+            try {
+                String tournament = cols[1].trim();
+                String date = cols[2].trim();
+                double points = Double.parseDouble(cols[3].trim());
+                int games = Integer.parseInt(cols[4].trim());
+                int standing = Integer.parseInt(cols[5].trim());
+                long tId = addOrGetTournament(tournament, date);
+                addResult(tId, child.id, points, games, standing);
+                added++;
+            } catch (NumberFormatException ignored) {
+                // malformed numeric cell — skip this row
+            }
+        }
+        return added;
+    }
+
     // ============================================================ NEWS
 
     public List<NewsItem> getNews() {

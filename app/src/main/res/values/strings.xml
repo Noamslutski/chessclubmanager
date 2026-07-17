@@ -83,6 +83,9 @@
     <string name="puzzle_next">התרגיל הבא</string>
     <string name="import_pgn">ייבוא PGN</string>
     <string name="import_lichess">ייבוא מ־Lichess</string>
+    <string name="puzzle_add_manual">הוספת תרגיל ידנית</string>
+    <string name="puzzle_invalid">מהלך הפתרון אינו חוקי עבור המצב שהוזן</string>
+    <string name="add_puzzle">הוספת תרגיל</string>
 
     <!-- Library -->
     <string name="library_title">ספריית המועדון</string>

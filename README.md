@@ -78,9 +78,11 @@ valid child's email+password during registration, they are linked and granted th
   targets, tap a target to move. Solved by matching the stored solution line.
 - `chess/ChessBoard` parses FEN and applies UCI moves (incl. castling, promotion,
   en passant) and generates pseudo‑legal moves.
-- **PGN import** (tutor/admin): the **Import PGN** button on the Puzzles screen reads a
-  `.pgn` file and converts each game's main line to a puzzle (`chess/PgnImporter`).
-  Puzzles exported from Lichess/ChessBase import this way.
+- **Upload puzzles** (tutor/admin): the button on the Puzzles screen offers two paths:
+  - **Import PGN** — reads a `.pgn` file and converts each game's main line to a puzzle
+    (`chess/PgnImporter`). Puzzles exported from Lichess/ChessBase import this way.
+  - **Add manually** — enter a FEN + UCI solution; the move is validated against the
+    engine before it is saved.
 
 ## Library
 
@@ -88,6 +90,17 @@ Everyone can browse. Tutors/admins add a book with **category** (opening/attack/
 endgame/psychology/strategy/tactics), **side** (white/black/both), **rating range**,
 **language**, and a **PDF** (via the system file picker). Each book has **Open** and
 **Print** actions.
+
+## Assignments & tournaments
+
+- **Assignments/homework** — tutors/admins post a task to a group with an optional
+  PDF/PGN/text attachment. Students mark items done; students and parents get a
+  home‑screen popup while any work is outstanding.
+- **Tournament results** — tutors/admins **Import results** from a CSV export (like a
+  chess‑results download). Expected columns:
+  `child_email, tournament, date, points, games, standing` (a header row is skipped
+  automatically). Rows are scoped so a student sees only their own results, a parent
+  their children's, a tutor their students', and an admin everything.
 
 ## Localization
 

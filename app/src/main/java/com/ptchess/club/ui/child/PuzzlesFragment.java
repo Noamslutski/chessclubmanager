@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -73,7 +74,7 @@ public class PuzzlesFragment extends Fragment {
         User user = ((MainActivity) requireActivity()).getCurrentUser();
         if (user.role == Role.TUTOR || user.role == Role.ADMIN) {
             importBtn.setVisibility(View.VISIBLE);
-            importBtn.setOnClickListener(v -> pgnPicker.launch(new String[]{"*/*"}));
+            importBtn.setOnClickListener(v -> showStaffOptions());
         }
 
         pgnPicker = registerForActivityResult(
@@ -186,6 +187,77 @@ public class PuzzlesFragment extends Fragment {
     private boolean samePrimaryMove(String a, String b) {
         return a != null && b != null && a.length() >= 4 && b.length() >= 4
                 && a.substring(0, 4).equals(b.substring(0, 4));
+    }
+
+    private void showStaffOptions() {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.add_puzzle)
+                .setItems(new CharSequence[]{
+                        getString(R.string.import_pgn),
+                        getString(R.string.puzzle_add_manual)}, (d, which) -> {
+                    if (which == 0) pgnPicker.launch(new String[]{"*/*"});
+                    else showAddPuzzleManual();
+                })
+                .show();
+    }
+
+    private void showAddPuzzleManual() {
+        User user = ((MainActivity) requireActivity()).getCurrentUser();
+        View form = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_add_puzzle, null, false);
+        EditText title = form.findViewById(R.id.puzzleTitle);
+        EditText levelField = form.findViewById(R.id.puzzleLevel);
+        EditText fenField = form.findViewById(R.id.puzzleFen);
+        EditText solutionField = form.findViewById(R.id.puzzleSolution);
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.add_puzzle)
+                .setView(form)
+                .setPositiveButton(R.string.save, (d, w) -> {
+                    String t = title.getText().toString().trim();
+                    String fen = fenField.getText().toString().trim();
+                    String sol = solutionField.getText().toString().trim();
+                    int lvl = clampLevel(levelField.getText().toString());
+                    if (fen.isEmpty() || sol.isEmpty() || !firstMoveLegal(fen, sol)) {
+                        UiUtils.toast(requireContext(), R.string.puzzle_invalid);
+                        return;
+                    }
+                    ClubRepository repo = ClubRepository.getInstance(requireContext());
+                    Async.io(() -> {
+                        repo.addPuzzle(t.isEmpty() ? getString(R.string.puzzles_title) : t,
+                                lvl, fen, sol, user.id);
+                        Async.main(this::loadPuzzles);
+                    });
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private int clampLevel(String s) {
+        try {
+            int v = Integer.parseInt(s.trim());
+            return Math.max(1, Math.min(3, v));
+        } catch (Exception e) {
+            return 2;
+        }
+    }
+
+    /** Validates that the first solution move is legal for the given FEN. */
+    private boolean firstMoveLegal(String fen, String solution) {
+        try {
+            String first = solution.trim().split("\\s+")[0];
+            ChessBoard b = ChessBoard.fromFen(fen);
+            int fromCol = first.charAt(0) - 'a';
+            int fromRow = 8 - (first.charAt(1) - '0');
+            int toCol = first.charAt(2) - 'a';
+            int toRow = 8 - (first.charAt(3) - '0');
+            for (int[] target : b.legalTargets(fromRow, fromCol)) {
+                if (target[0] == toRow && target[1] == toCol) return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void onPgnPicked(@Nullable Uri uri) {

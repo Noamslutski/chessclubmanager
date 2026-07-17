@@ -75,6 +75,9 @@
     <string name="puzzle_next">Next puzzle</string>
     <string name="import_pgn">Import PGN</string>
     <string name="import_lichess">Import from Lichess</string>
+    <string name="puzzle_add_manual">Add puzzle manually</string>
+    <string name="puzzle_invalid">The solution move is not legal for the entered position</string>
+    <string name="add_puzzle">Add puzzle</string>
 
     <string name="library_title">Club library</string>
     <string name="add_book">Add book</string>
