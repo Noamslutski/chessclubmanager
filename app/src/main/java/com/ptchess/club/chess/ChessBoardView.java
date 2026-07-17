@@ -59,17 +59,15 @@ public class ChessBoardView extends View {
         checkPaint.setColor(0x88E5566B);
         dotPaint.setColor(0x992B6EE0);
 
-        // Pieces are drawn as a matched pair of glyphs: a solid body glyph plus
-        // the outline glyph on top (crisp contour + internal detail), with a soft
-        // drop shadow. This reads far cleaner than a single glyph with a stroke.
-        pieceShadow.setColor(0x4D000000);
+        // Pieces are drawn as real vector shapes (see ChessPieceRenderer): a soft
+        // drop shadow, a contrasting outline, then the body fill.
+        pieceShadow.setColor(0x40000000);
         whiteBody.setColor(0xFFF7FAFF);   // near-white fill
-        whiteEdge.setColor(0xFF12263F);   // dark contour + detail
-        blackBody.setColor(0xFF17253E);   // deep navy fill (softer than pure black)
-        blackEdge.setColor(0xFFE7EEF8);   // light contour + detail
-
+        whiteEdge.setColor(0xFF14263F);   // dark outline
+        blackBody.setColor(0xFF1A2942);   // deep navy fill (softer than pure black)
+        blackEdge.setColor(0xFFDCE6F5);   // light outline
         for (Paint p : new Paint[]{pieceShadow, whiteBody, whiteEdge, blackBody, blackEdge}) {
-            p.setTextAlign(Paint.Align.CENTER);
+            p.setStyle(Paint.Style.FILL);
         }
         coordPaint.setColor(0x66FFFFFF);
         coordPaint.setTextAlign(Paint.Align.LEFT);
@@ -154,29 +152,14 @@ public class ChessBoardView extends View {
             }
         }
 
-        // Pieces
-        float textSize = cell * 0.86f;
-        for (Paint p : new Paint[]{pieceShadow, whiteBody, whiteEdge, blackBody, blackEdge}) {
-            p.setTextSize(textSize);
-        }
-        Paint.FontMetrics fm = whiteBody.getFontMetrics();
-        float baselineOffset = (fm.descent + fm.ascent) / 2f;
-        float shadowDx = cell * 0.015f;
-        float shadowDy = cell * 0.03f;
-
+        // Pieces (vector shapes)
         for (int r = 0; r < 8; r++) {
             for (int col = 0; col < 8; col++) {
                 char p = board.pieceAt(r, col);
                 if (p == '.') continue;
-                String solid = solidGlyph(p);
-                String outline = outlineGlyph(p);
-                float cx = col * cell + cell / 2f;
-                float cy = r * cell + cell / 2f - baselineOffset;
                 boolean white = ChessBoard.isWhite(p);
-                // soft shadow, then the solid body, then the outline+detail on top
-                canvas.drawText(solid, cx + shadowDx, cy + shadowDy, pieceShadow);
-                canvas.drawText(solid, cx, cy, white ? whiteBody : blackBody);
-                canvas.drawText(outline, cx, cy, white ? whiteEdge : blackEdge);
+                ChessPieceRenderer.draw(canvas, p, col * cell, r * cell, cell,
+                        white ? whiteBody : blackBody, white ? whiteEdge : blackEdge, pieceShadow);
             }
         }
 
@@ -186,32 +169,6 @@ public class ChessBoardView extends View {
                     i * cell + cell * 0.06f, getHeight() - cell * 0.06f, coordPaint);
             canvas.drawText(String.valueOf(8 - i),
                     getWidth() - cell * 0.20f, i * cell + cell * 0.28f, coordPaint);
-        }
-    }
-
-    /** Solid (filled) glyph — the piece body silhouette (U+265A..265F). */
-    private String solidGlyph(char p) {
-        switch (Character.toUpperCase(p)) {
-            case 'K': return "♚";
-            case 'Q': return "♛";
-            case 'R': return "♜";
-            case 'B': return "♝";
-            case 'N': return "♞";
-            case 'P': return "♟";
-            default: return "";
-        }
-    }
-
-    /** Outline glyph — same piece drawn as contour + internal detail (U+2654..2659). */
-    private String outlineGlyph(char p) {
-        switch (Character.toUpperCase(p)) {
-            case 'K': return "♔";
-            case 'Q': return "♕";
-            case 'R': return "♖";
-            case 'B': return "♗";
-            case 'N': return "♘";
-            case 'P': return "♙";
-            default: return "";
         }
     }
 
