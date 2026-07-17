@@ -17,6 +17,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.ptchess.club.R;
 import com.ptchess.club.chess.ChessBoard;
 import com.ptchess.club.chess.ChessBoardView;
@@ -25,6 +27,7 @@ import com.ptchess.club.data.ClubRepository;
 import com.ptchess.club.data.model.Puzzle;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
+import com.ptchess.club.data.remote.LichessApi;
 import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.util.Async;
 import com.ptchess.club.util.UiUtils;
@@ -33,14 +36,19 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 public class PuzzlesFragment extends Fragment {
 
     private ChessBoardView boardView;
     private TextView title, level, sideToMove, status;
+    private ChipGroup chipLevels;
 
-    private List<Puzzle> puzzles;
+    private List<Puzzle> allPuzzles = new ArrayList<>();
+    private List<Puzzle> puzzles = new ArrayList<>();
+    private int currentLevel = 0; // 0 = all levels
     private int index = 0;
 
     private ChessBoard board;
@@ -64,11 +72,13 @@ public class PuzzlesFragment extends Fragment {
         level = view.findViewById(R.id.txtLevel);
         sideToMove = view.findViewById(R.id.txtSideToMove);
         status = view.findViewById(R.id.txtStatus);
+        chipLevels = view.findViewById(R.id.chipLevels);
 
         boardView.setOnMoveListener(this::onUserMove);
         view.findViewById(R.id.btnHint).setOnClickListener(v -> showHint());
         view.findViewById(R.id.btnReset).setOnClickListener(v -> loadPuzzle(index));
         view.findViewById(R.id.btnNext).setOnClickListener(v -> nextPuzzle());
+        view.findViewById(R.id.btnLichess).setOnClickListener(v -> showLichessDialog());
 
         MaterialButton importBtn = view.findViewById(R.id.btnImportPgn);
         User user = ((MainActivity) requireActivity()).getCurrentUser();
@@ -89,12 +99,96 @@ public class PuzzlesFragment extends Fragment {
             List<Puzzle> loaded = repo.getPuzzles();
             Async.main(() -> {
                 if (!isAdded()) return;
-                puzzles = loaded;
-                index = 0;
-                if (puzzles.isEmpty()) {
-                    status.setText(R.string.no_results);
+                allPuzzles = loaded;
+                rebuildLevelChips();
+                applyFilter(currentLevel);
+            });
+        });
+    }
+
+    /** Rebuilds the level filter chips from the levels present in the pool. */
+    private void rebuildLevelChips() {
+        chipLevels.setOnCheckedStateChangeListener(null);
+        chipLevels.removeAllViews();
+        addLevelChip(getString(R.string.level_all), 0);
+
+        TreeSet<Integer> levels = new TreeSet<>();
+        for (Puzzle p : allPuzzles) levels.add(p.level);
+        for (int lvl : levels) addLevelChip(getString(R.string.puzzle_level, lvl), lvl);
+
+        if (currentLevel != 0 && !levels.contains(currentLevel)) currentLevel = 0;
+        checkChipForLevel(currentLevel);
+
+        chipLevels.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) return;
+            Chip c = group.findViewById(checkedIds.get(0));
+            if (c != null && c.getTag() != null) applyFilter((int) c.getTag());
+        });
+    }
+
+    private void addLevelChip(String text, int levelValue) {
+        Chip chip = (Chip) LayoutInflater.from(requireContext())
+                .inflate(R.layout.item_level_chip, chipLevels, false);
+        chip.setText(text);
+        chip.setTag(levelValue);
+        chip.setId(View.generateViewId());
+        chipLevels.addView(chip);
+    }
+
+    private void checkChipForLevel(int levelValue) {
+        for (int i = 0; i < chipLevels.getChildCount(); i++) {
+            Chip c = (Chip) chipLevels.getChildAt(i);
+            if (c.getTag() != null && (int) c.getTag() == levelValue) {
+                c.setChecked(true);
+                return;
+            }
+        }
+    }
+
+    private void applyFilter(int levelValue) {
+        currentLevel = levelValue;
+        puzzles = new ArrayList<>();
+        for (Puzzle p : allPuzzles) {
+            if (levelValue == 0 || p.level == levelValue) puzzles.add(p);
+        }
+        index = 0;
+        if (puzzles.isEmpty()) {
+            status.setTextColor(getResources().getColor(R.color.text_muted, null));
+            status.setText(R.string.no_results);
+        } else {
+            loadPuzzle(0);
+        }
+    }
+
+    private void showLichessDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.choose_difficulty)
+                .setItems(getResources().getStringArray(R.array.lichess_difficulties),
+                        (d, which) -> importFromLichess(LichessApi.DIFFICULTIES[which]))
+                .show();
+    }
+
+    private void importFromLichess(String difficulty) {
+        UiUtils.toast(requireContext(), R.string.lichess_loading);
+        User user = ((MainActivity) requireActivity()).getCurrentUser();
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
+            List<LichessApi.RemotePuzzle> remote = LichessApi.fetchBatch(difficulty, 8);
+            int added = 0;
+            for (LichessApi.RemotePuzzle rp : remote) {
+                if (rp.solutionUci == null || rp.solutionUci.isEmpty()) continue;
+                repo.addPuzzle(rp.title, rp.level, rp.fen, rp.solutionUci, user.id);
+                added++;
+            }
+            int finalAdded = added;
+            Async.main(() -> {
+                if (!isAdded()) return;
+                if (finalAdded == 0) {
+                    UiUtils.toast(requireContext(), R.string.lichess_failed);
                 } else {
-                    loadPuzzle(0);
+                    UiUtils.toast(requireContext(),
+                            getString(R.string.lichess_added, finalAdded));
+                    loadPuzzles();
                 }
             });
         });

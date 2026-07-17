@@ -52,6 +52,35 @@ public class ChessBoard {
         return squares[row][col];
     }
 
+    /** Serializes the current position to FEN (halfmove/fullmove fixed at "0 1"). */
+    public String toFen() {
+        StringBuilder sb = new StringBuilder();
+        for (int r = 0; r < 8; r++) {
+            int empty = 0;
+            for (int c = 0; c < 8; c++) {
+                char p = squares[r][c];
+                if (p == '.') {
+                    empty++;
+                } else {
+                    if (empty > 0) { sb.append(empty); empty = 0; }
+                    sb.append(p);
+                }
+            }
+            if (empty > 0) sb.append(empty);
+            if (r < 7) sb.append('/');
+        }
+        sb.append(' ').append(whiteToMove ? 'w' : 'b');
+        sb.append(' ').append(castling == null || castling.isEmpty() ? "-" : castling);
+        sb.append(' ');
+        if (epRow >= 0 && epCol >= 0) {
+            sb.append((char) ('a' + epCol)).append(8 - epRow);
+        } else {
+            sb.append('-');
+        }
+        sb.append(" 0 1");
+        return sb.toString();
+    }
+
     public boolean isWhiteToMove() {
         return whiteToMove;
     }

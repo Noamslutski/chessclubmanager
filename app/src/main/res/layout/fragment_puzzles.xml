@@ -54,11 +54,26 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipLevels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:singleSelection="true"
+                app:selectionRequired="true" />
+        </HorizontalScrollView>
+
         <com.ptchess.club.chess.ChessBoardView
             android:id="@+id/boardView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="12dp" />
 
         <TextView
             android:id="@+id/txtStatus"
@@ -105,15 +120,26 @@
                 android:text="@string/puzzle_next" />
         </LinearLayout>
 
+        <!-- Available to everyone: pull fresh puzzles from Lichess -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnImportPgn"
+            android:id="@+id/btnLichess"
             style="@style/Widget.PTChess.Button.Gold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:visibility="gone"
             app:icon="@drawable/ic_upload"
             app:iconTint="@color/black_900"
-            android:text="@string/import_pgn" />
+            android:text="@string/import_lichess" />
+
+        <!-- Staff only: PGN import / manual entry -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnImportPgn"
+            style="@style/Widget.PTChess.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"
+            app:icon="@drawable/ic_add"
+            android:text="@string/add_puzzle" />
     </LinearLayout>
 </ScrollView>

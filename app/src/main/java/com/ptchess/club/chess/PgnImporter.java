@@ -106,7 +106,7 @@ public final class PgnImporter {
     }
 
     /** Resolves one SAN move against the current position, returning UCI or null. */
-    static String sanToUci(ChessBoard board, String san) {
+    public static String sanToUci(ChessBoard board, String san) {
         if (san == null) return null;
         String s = san.replaceAll("[+#!?]", "").trim();
         if (s.isEmpty()) return null;

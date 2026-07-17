@@ -86,6 +86,19 @@
     <string name="puzzle_add_manual">הוספת תרגיל ידנית</string>
     <string name="puzzle_invalid">מהלך הפתרון אינו חוקי עבור המצב שהוזן</string>
     <string name="add_puzzle">הוספת תרגיל</string>
+    <string name="level_all">הכל</string>
+    <string name="choose_difficulty">בחר רמת קושי</string>
+    <string name="lichess_loading">טוען תרגילים מ־Lichess…</string>
+    <string name="lichess_failed">טעינת התרגילים נכשלה. בדוק את החיבור לאינטרנט.</string>
+    <string name="lichess_added">נוספו %1$d תרגילים מ־Lichess</string>
+
+    <string-array name="lichess_difficulties">
+        <item>הכי קל</item>
+        <item>קל</item>
+        <item>רגיל</item>
+        <item>קשה</item>
+        <item>הכי קשה</item>
+    </string-array>
 
     <!-- Library -->
     <string name="library_title">ספריית המועדון</string>

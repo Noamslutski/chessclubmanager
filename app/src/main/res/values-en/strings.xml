@@ -78,6 +78,19 @@
     <string name="puzzle_add_manual">Add puzzle manually</string>
     <string name="puzzle_invalid">The solution move is not legal for the entered position</string>
     <string name="add_puzzle">Add puzzle</string>
+    <string name="level_all">All</string>
+    <string name="choose_difficulty">Choose difficulty</string>
+    <string name="lichess_loading">Loading puzzles from Lichess…</string>
+    <string name="lichess_failed">Could not load puzzles. Check your internet connection.</string>
+    <string name="lichess_added">Added %1$d puzzles from Lichess</string>
+
+    <string-array name="lichess_difficulties">
+        <item>Easiest</item>
+        <item>Easier</item>
+        <item>Normal</item>
+        <item>Harder</item>
+        <item>Hardest</item>
+    </string-array>
 
     <string name="library_title">Club library</string>
     <string name="add_book">Add book</string>

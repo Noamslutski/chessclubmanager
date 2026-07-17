@@ -31,10 +31,11 @@ public class ChessBoardView extends View {
     private final Paint selPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint lastPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint whitePiece = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint whitePieceStroke = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint blackPiece = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint blackPieceStroke = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint pieceShadow = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint whiteBody = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint whiteEdge = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint blackBody = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint blackEdge = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint coordPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private ChessBoard board;
@@ -56,14 +57,16 @@ public class ChessBoardView extends View {
         lastPaint.setColor(0x552B6EE0);
         dotPaint.setColor(0x992B6EE0);
 
-        whitePiece.setColor(0xFFF6F8FC);
-        whitePieceStroke.setColor(0xFF0C121D);
-        whitePieceStroke.setStyle(Paint.Style.STROKE);
-        blackPiece.setColor(0xFF10192B);
-        blackPieceStroke.setColor(0xFFE9EDF4);
-        blackPieceStroke.setStyle(Paint.Style.STROKE);
+        // Pieces are drawn as a matched pair of glyphs: a solid body glyph plus
+        // the outline glyph on top (crisp contour + internal detail), with a soft
+        // drop shadow. This reads far cleaner than a single glyph with a stroke.
+        pieceShadow.setColor(0x4D000000);
+        whiteBody.setColor(0xFFF7FAFF);   // near-white fill
+        whiteEdge.setColor(0xFF12263F);   // dark contour + detail
+        blackBody.setColor(0xFF17253E);   // deep navy fill (softer than pure black)
+        blackEdge.setColor(0xFFE7EEF8);   // light contour + detail
 
-        for (Paint p : new Paint[]{whitePiece, blackPiece, whitePieceStroke, blackPieceStroke}) {
+        for (Paint p : new Paint[]{pieceShadow, whiteBody, whiteEdge, blackBody, blackEdge}) {
             p.setTextAlign(Paint.Align.CENTER);
         }
         coordPaint.setColor(0x66FFFFFF);
@@ -145,31 +148,28 @@ public class ChessBoardView extends View {
         }
 
         // Pieces
-        float textSize = cell * 0.80f;
-        whitePiece.setTextSize(textSize);
-        blackPiece.setTextSize(textSize);
-        whitePieceStroke.setTextSize(textSize);
-        blackPieceStroke.setTextSize(textSize);
-        whitePieceStroke.setStrokeWidth(cell * 0.03f);
-        blackPieceStroke.setStrokeWidth(cell * 0.03f);
-
-        Paint.FontMetrics fm = whitePiece.getFontMetrics();
+        float textSize = cell * 0.86f;
+        for (Paint p : new Paint[]{pieceShadow, whiteBody, whiteEdge, blackBody, blackEdge}) {
+            p.setTextSize(textSize);
+        }
+        Paint.FontMetrics fm = whiteBody.getFontMetrics();
         float baselineOffset = (fm.descent + fm.ascent) / 2f;
+        float shadowDx = cell * 0.015f;
+        float shadowDy = cell * 0.03f;
 
         for (int r = 0; r < 8; r++) {
             for (int col = 0; col < 8; col++) {
                 char p = board.pieceAt(r, col);
                 if (p == '.') continue;
-                String glyph = glyphFor(p);
+                String solid = solidGlyph(p);
+                String outline = outlineGlyph(p);
                 float cx = col * cell + cell / 2f;
                 float cy = r * cell + cell / 2f - baselineOffset;
-                if (ChessBoard.isWhite(p)) {
-                    canvas.drawText(glyph, cx, cy, whitePiece);
-                    canvas.drawText(glyph, cx, cy, whitePieceStroke);
-                } else {
-                    canvas.drawText(glyph, cx, cy, blackPiece);
-                    canvas.drawText(glyph, cx, cy, blackPieceStroke);
-                }
+                boolean white = ChessBoard.isWhite(p);
+                // soft shadow, then the solid body, then the outline+detail on top
+                canvas.drawText(solid, cx + shadowDx, cy + shadowDy, pieceShadow);
+                canvas.drawText(solid, cx, cy, white ? whiteBody : blackBody);
+                canvas.drawText(outline, cx, cy, white ? whiteEdge : blackEdge);
             }
         }
 
@@ -182,8 +182,8 @@ public class ChessBoardView extends View {
         }
     }
 
-    /** Always use the filled chess glyphs; colour distinguishes the side. */
-    private String glyphFor(char p) {
+    /** Solid (filled) glyph — the piece body silhouette (U+265A..265F). */
+    private String solidGlyph(char p) {
         switch (Character.toUpperCase(p)) {
             case 'K': return "♚";
             case 'Q': return "♛";
@@ -191,6 +191,19 @@ public class ChessBoardView extends View {
             case 'B': return "♝";
             case 'N': return "♞";
             case 'P': return "♟";
+            default: return "";
+        }
+    }
+
+    /** Outline glyph — same piece drawn as contour + internal detail (U+2654..2659). */
+    private String outlineGlyph(char p) {
+        switch (Character.toUpperCase(p)) {
+            case 'K': return "♔";
+            case 'Q': return "♕";
+            case 'R': return "♖";
+            case 'B': return "♗";
+            case 'N': return "♘";
+            case 'P': return "♙";
             default: return "";
         }
     }
