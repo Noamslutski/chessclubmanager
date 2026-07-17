@@ -1,5 +1,6 @@
 // Top-level build file. Plugin versions are declared here and applied per-module.
 plugins {
     id 'com.android.application' version '8.5.2' apply false
+    // Firebase: applied by the app module only when google-services.json exists.
     id("com.google.gms.google-services") version "4.5.0" apply false
 }

@@ -24,6 +24,7 @@ import com.ptchess.club.chess.ChessBoard;
 import com.ptchess.club.chess.ChessBoardView;
 import com.ptchess.club.chess.PgnImporter;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.PuzzleCloud;
 import com.ptchess.club.data.model.Puzzle;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
@@ -118,12 +119,33 @@ public class PuzzlesFragment extends Fragment {
         });
     }
 
-    /** First-run: fetch a spread of real Lichess puzzles into the club pool. */
+    /**
+     * First-run population. Prefers the shared Firestore pool (kept fresh by the
+     * scheduled Cloud Function); if Firebase isn't configured or the pool is
+     * empty, falls back to fetching from Lichess directly.
+     */
     private void autoLoadFromLichess() {
         status.setTextColor(getResources().getColor(R.color.text_muted, null));
         status.setText(R.string.lichess_loading);
         User user = ((MainActivity) requireActivity()).getCurrentUser();
         ClubRepository repo = ClubRepository.getInstance(requireContext());
+
+        PuzzleCloud.fetch(requireContext(), cloud -> {
+            if (!isAdded()) return;
+            if (!cloud.isEmpty()) {
+                Async.io(() -> {
+                    for (Puzzle p : cloud) {
+                        repo.addPuzzle(user.clubId, p.title, p.level, p.fen, p.solutionUci, user.id);
+                    }
+                    Async.main(() -> { if (isAdded()) loadPuzzles(); });
+                });
+            } else {
+                fetchFromLichessDirect(user, repo);
+            }
+        });
+    }
+
+    private void fetchFromLichessDirect(User user, ClubRepository repo) {
         Async.io(() -> {
             for (String difficulty : new String[]{"easier", "normal", "harder"}) {
                 for (LichessApi.RemotePuzzle rp : LichessApi.fetchBatch(difficulty, 4)) {
@@ -131,9 +153,7 @@ public class PuzzlesFragment extends Fragment {
                     repo.addPuzzle(user.clubId, rp.title, rp.level, rp.fen, rp.solutionUci, user.id);
                 }
             }
-            Async.main(() -> {
-                if (isAdded()) loadPuzzles();
-            });
+            Async.main(() -> { if (isAdded()) loadPuzzles(); });
         });
     }
 

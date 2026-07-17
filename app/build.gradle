@@ -58,9 +58,23 @@ dependencies {
 
     // Encrypted session storage (keeps the logged-in user id off plain prefs).
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
+    // Firebase (BoM-managed): Firestore for shared data, Storage for files,
+    // Auth for the future login migration, plus Analytics. Activated at runtime
+    // only when a google-services.json is present.
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-auth")
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+}
+
+// Apply Firebase's google-services plugin only when the config file is present,
+// so the project still builds cleanly before Firebase is configured.
+if (file('google-services.json').exists()) {
+    apply plugin: 'com.google.gms.google-services'
 }
