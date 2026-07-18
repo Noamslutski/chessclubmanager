@@ -34,6 +34,14 @@ service cloud.firestore {
         allow read: if inClub(clubId);
         allow create, update, delete: if inClub(clubId) && isStaff();
       }
+
+      // Gamification activity log: any club member may append their own activity
+      // (puzzle solved, assignment done); it is append-only and club-readable.
+      match /activity/{docId} {
+        allow read: if inClub(clubId);
+        allow create: if inClub(clubId);
+        allow update, delete: if false;
+      }
     }
 
     // User profiles.

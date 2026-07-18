@@ -298,6 +298,15 @@ public class TournamentsFragment extends Fragment {
                     }
                 }
                 FirebaseContent.importResults(clubId, rows, added -> {
+                    // Award XP: a tournament played (+ a podium bonus for a top-3 finish).
+                    for (FirebaseContent.ResultRow r : rows) {
+                        FirebaseContent.logActivity(clubId, r.childEmail,
+                                com.ptchess.club.data.model.Activity.TOURNAMENT, r.date);
+                        if (r.standing >= 1 && r.standing <= 3) {
+                            FirebaseContent.logActivity(clubId, r.childEmail,
+                                    com.ptchess.club.data.model.Activity.PODIUM, r.date);
+                        }
+                    }
                     if (!isAdded()) return;
                     UiUtils.toast(requireContext(), "CSV: +" + added);
                     if (resultsMode) loadResults();

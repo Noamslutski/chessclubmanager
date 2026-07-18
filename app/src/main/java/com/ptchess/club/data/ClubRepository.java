@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.ptchess.club.data.model.Activity;
 import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.AuthResult;
 import com.ptchess.club.data.model.Book;
@@ -20,7 +21,9 @@ import com.ptchess.club.security.InputValidator;
 import com.ptchess.club.security.PasswordHasher;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Single access point to the local data store. Every statement is parameterized
@@ -861,6 +864,10 @@ public final class ClubRepository {
                 int standing = Integer.parseInt(cols[5].trim());
                 long tId = addOrGetTournament(clubId, tournament, date);
                 addResult(tId, child.id, points, games, standing);
+                logActivity(clubId, child.id, child.email, Activity.TOURNAMENT, date);
+                if (standing >= 1 && standing <= 3) {
+                    logActivity(clubId, child.id, child.email, Activity.PODIUM, date);
+                }
                 added++;
             } catch (NumberFormatException ignored) {
                 // malformed numeric cell — skip this row
@@ -895,6 +902,55 @@ public final class ClubRepository {
         v.put("date", java.text.DateFormat.getDateInstance().format(new java.util.Date()));
         v.put("created_by", by);
         return helper.getWritableDatabase().insert(DbHelper.T_NEWS, null, v);
+    }
+
+    // ============================================================ ACTIVITY (gamification)
+
+    public long logActivity(long clubId, long userId, String email, String type, String dateIso) {
+        ContentValues v = new ContentValues();
+        v.put("club_id", clubId);
+        v.put("user_id", userId);
+        v.put("email", email == null ? "" : email.trim().toLowerCase());
+        v.put("type", type);
+        v.put("date_iso", dateIso);
+        v.put("ts", System.currentTimeMillis());
+        return helper.getWritableDatabase().insert(DbHelper.T_ACTIVITY, null, v);
+    }
+
+    public List<Activity> getActivityForEmail(String email) {
+        return queryActivity("email = ?",
+                new String[]{email == null ? "" : email.trim().toLowerCase()});
+    }
+
+    public List<Activity> getActivityForClub(long clubId) {
+        return queryActivity("club_id = ?", new String[]{String.valueOf(clubId)});
+    }
+
+    private List<Activity> queryActivity(String where, String[] args) {
+        List<Activity> out = new ArrayList<>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+        try (Cursor c = db.query(DbHelper.T_ACTIVITY,
+                new String[]{"email", "type", "date_iso", "ts"},
+                where, args, null, null, "ts DESC")) {
+            while (c.moveToNext()) {
+                out.add(new Activity(c.getString(0), c.getString(1), c.getString(2), c.getLong(3)));
+            }
+        }
+        return out;
+    }
+
+    /** email (lowercased) → display name, for the club leaderboard. */
+    public Map<String, String> getClubEmailNames(long clubId) {
+        Map<String, String> out = new LinkedHashMap<>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+        try (Cursor c = db.query(DbHelper.T_USERS, new String[]{"email", "full_name"},
+                "club_id = ?", new String[]{String.valueOf(clubId)}, null, null, null)) {
+            while (c.moveToNext()) {
+                String email = c.getString(0);
+                if (email != null) out.put(email.trim().toLowerCase(), c.getString(1));
+            }
+        }
+        return out;
     }
 
     // ============================================================ CONTACTS

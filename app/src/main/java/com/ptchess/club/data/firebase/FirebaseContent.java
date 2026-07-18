@@ -8,6 +8,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.ptchess.club.data.model.Activity;
 import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.Book;
 import com.ptchess.club.data.model.Group;
@@ -43,6 +44,8 @@ public final class FirebaseContent {
     public interface UsersCb { void ok(List<User> items); void fail(); }
     public interface CountCb { void done(int count); }
     public interface ParentKidsCb { void ready(List<String> kidEmails); }
+    public interface ActivityCb { void ok(List<Activity> items); void fail(); }
+    public interface EmailNamesCb { void ok(Map<String, String> nameByEmail); void fail(); }
 
     private FirebaseContent() { }
 
@@ -441,6 +444,68 @@ public final class FirebaseContent {
             }
             @Override public void fail() { cb.fail(); }
         });
+    }
+
+    // ============================================================ ACTIVITY (gamification)
+
+    public static void logActivity(long clubId, String email, String type, String dateIso) {
+        try {
+            Map<String, Object> m = new HashMap<>();
+            m.put("email", email != null ? email.trim().toLowerCase() : "");
+            m.put("type", type);
+            m.put("dateIso", dateIso);
+            m.put("tsMs", System.currentTimeMillis());
+            col(clubId, "activity").add(m);
+        } catch (Throwable ignored) { }
+    }
+
+    public static void fetchActivityForEmail(long clubId, String email, ActivityCb cb) {
+        String key = email != null ? email.trim().toLowerCase() : "";
+        try {
+            col(clubId, "activity").whereEqualTo("email", key).get()
+                    .addOnSuccessListener(qs -> cb.ok(mapActivities(qs.getDocuments())))
+                    .addOnFailureListener(e -> cb.fail());
+        } catch (Throwable t) {
+            cb.fail();
+        }
+    }
+
+    public static void fetchActivityForClub(long clubId, ActivityCb cb) {
+        try {
+            col(clubId, "activity").get()
+                    .addOnSuccessListener(qs -> cb.ok(mapActivities(qs.getDocuments())))
+                    .addOnFailureListener(e -> cb.fail());
+        } catch (Throwable t) {
+            cb.fail();
+        }
+    }
+
+    private static List<Activity> mapActivities(List<DocumentSnapshot> docs) {
+        List<Activity> out = new ArrayList<>();
+        for (DocumentSnapshot d : docs) {
+            out.add(new Activity(str(d, "email"), str(d, "type"), str(d, "dateIso"),
+                    lng(d, "tsMs", 0)));
+        }
+        return out;
+    }
+
+    /** All club members' email→name map (for the leaderboard). */
+    public static void fetchClubEmailNames(long clubId, EmailNamesCb cb) {
+        try {
+            FirebaseFirestore.getInstance().collection("users")
+                    .whereEqualTo("clubId", clubId).get()
+                    .addOnSuccessListener(qs -> {
+                        Map<String, String> out = new HashMap<>();
+                        for (DocumentSnapshot d : qs.getDocuments()) {
+                            String email = str(d, "email");
+                            if (!email.isEmpty()) out.put(email.trim().toLowerCase(), str(d, "fullName"));
+                        }
+                        cb.ok(out);
+                    })
+                    .addOnFailureListener(e -> cb.fail());
+        } catch (Throwable t) {
+            cb.fail();
+        }
     }
 
     // ============================================================ DIRECTORY

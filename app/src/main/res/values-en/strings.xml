@@ -236,6 +236,34 @@
     <string name="loading">Loading…</string>
     <string name="coming_soon">In development — will connect to the club server.</string>
 
+    <!-- Gamification -->
+    <string name="nav_progress">My progress</string>
+    <string name="nav_analytics">Club analytics</string>
+    <string name="gam_level">Level %1$d</string>
+    <string name="gam_xp">%1$d XP</string>
+    <string name="gam_xp_progress">%1$d / %2$d XP</string>
+    <string name="gam_streak_days">%1$d-day streak</string>
+    <string name="gam_puzzles">Puzzles</string>
+    <string name="gam_assignments">Assignments</string>
+    <string name="gam_tournaments">Tournaments</string>
+    <string name="gam_streak">Streak</string>
+    <string name="gam_badges">Badges</string>
+    <string name="gam_no_activity">Solve puzzles and finish assignments to earn XP and badges!</string>
+    <string name="gam_members">Members</string>
+    <string name="gam_active_week">Active this week</string>
+    <string name="gam_puzzles_solved">Puzzles solved</string>
+    <string name="gam_assignments_done">Assignments done</string>
+    <string name="gam_leaderboard">Leaderboard</string>
+    <string name="gam_rank">#%1$d</string>
+    <string name="gam_level_xp">Lv %1$d · %2$d XP</string>
+    <string name="gam_badge_progress">%1$d / %2$d</string>
+    <string name="gam_no_members">No activity yet.</string>
+    <string name="gam_cat_puzzles">puzzles</string>
+    <string name="gam_cat_assignments">assignments</string>
+    <string name="gam_cat_tournaments">tournaments</string>
+    <string name="gam_cat_podium">podium</string>
+    <string name="gam_cat_streak">day streak</string>
+
     <string-array name="weekdays">
         <item>Sunday</item>
         <item>Monday</item>

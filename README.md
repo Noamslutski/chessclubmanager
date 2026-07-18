@@ -53,6 +53,14 @@
   **clocks**, a highlighted **move list**, **captured material**, and a 6-second **auto-refresh**.
 - For now, only **elite games (both players 2400+)** are shown.
 
+### 🎮 Progress &amp; gamification
+- Students earn **XP** for solving puzzles, finishing assignments and playing tournaments, and level up
+  as they go — with a **daily streak** and unlockable **badges** (puzzle/assignment/tournament/streak milestones).
+- Admins get a **club analytics** dashboard: members, active-this-week, puzzles solved, assignments done,
+  tournaments played, and an **XP leaderboard**.
+- All of it is derived by `Gamification` — a pure, unit-tested engine over an append-only activity log
+  (Firestore when configured, SQLite otherwise).
+
 ### 🏆 Tournaments
 - **My results** (imported by staff from a CSV) and **Register** — real **federation tournaments** for the
   current month, showing **only the ones the player is eligible for by rating** (ineligible ones are hidden),
@@ -199,9 +207,9 @@ firebase.json         deploy config    ·    .firebaserc  (set your project id)
 ## 🛣 Roadmap &amp; limitations (need a backend)
 
 The following are intentionally **not faked** and require a backend/data pipeline to be real:
-emailing the admin on registration and password-reset emails, push notifications, cross-owner roster
-de-duplication + the super-admin approval queue, and analytics/attendance/gamification dashboards.
-The parse.bot key must be proxied server-side in production rather than shipped in the APK.
+emailing the admin on registration and password-reset emails, push notifications, and cross-owner roster
+de-duplication + the super-admin approval queue. The parse.bot key must be proxied server-side in
+production rather than shipped in the APK.
 
 Content in the Firestore layer syncs across devices for every role: verified parent→child links are
 mirrored onto the parent's own profile (`childEmails`), so a parent's groups/assignments/results scope

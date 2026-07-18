@@ -16,8 +16,10 @@ import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.ui.admin.AdminFragment;
+import com.ptchess.club.ui.admin.AnalyticsFragment;
 import com.ptchess.club.ui.admin.PlayersFragment;
 import com.ptchess.club.ui.admin.VerifyClubsFragment;
+import com.ptchess.club.ui.child.ProgressFragment;
 import com.ptchess.club.ui.parent.ChildrenFragment;
 import com.ptchess.club.ui.tutor.AssignmentsFragment;
 import com.ptchess.club.data.ClubRepository;
@@ -64,6 +66,12 @@ public class MoreFragment extends Fragment {
                 getString(R.string.nav_staff),
                 () -> host.openSection(new StaffFragment(), getString(R.string.nav_staff))));
 
+        if (user.role == Role.CHILD) {
+            items.add(new MoreAdapter.MoreItem(R.drawable.ic_tournament,
+                    getString(R.string.nav_progress),
+                    () -> host.openSection(new ProgressFragment(), getString(R.string.nav_progress))));
+        }
+
         if (user.role == Role.PARENT) {
             items.add(new MoreAdapter.MoreItem(R.drawable.ic_groups,
                     getString(R.string.nav_children),
@@ -74,6 +82,9 @@ public class MoreFragment extends Fragment {
             items.add(new MoreAdapter.MoreItem(R.drawable.ic_admin,
                     getString(R.string.nav_admin),
                     () -> host.openSection(new AdminFragment(), getString(R.string.nav_admin))));
+            items.add(new MoreAdapter.MoreItem(R.drawable.ic_tournament,
+                    getString(R.string.nav_analytics),
+                    () -> host.openSection(new AnalyticsFragment(), getString(R.string.nav_analytics))));
         }
 
         items.add(new MoreAdapter.MoreItem(R.drawable.ic_settings,

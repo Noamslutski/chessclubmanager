@@ -251,6 +251,34 @@
     <string name="loading">טוען…</string>
     <string name="coming_soon">בפיתוח — יחובר לשרת המועדון.</string>
 
+    <!-- Gamification -->
+    <string name="nav_progress">ההתקדמות שלי</string>
+    <string name="nav_analytics">נתוני המועדון</string>
+    <string name="gam_level">רמה %1$d</string>
+    <string name="gam_xp">%1$d נק׳</string>
+    <string name="gam_xp_progress">%1$d / %2$d נק׳</string>
+    <string name="gam_streak_days">רצף של %1$d ימים</string>
+    <string name="gam_puzzles">תרגילים</string>
+    <string name="gam_assignments">מטלות</string>
+    <string name="gam_tournaments">טורנירים</string>
+    <string name="gam_streak">רצף</string>
+    <string name="gam_badges">עיטורים</string>
+    <string name="gam_no_activity">פתרו תרגילים והשלימו מטלות כדי לצבור נקודות ועיטורים!</string>
+    <string name="gam_members">חברים</string>
+    <string name="gam_active_week">פעילים השבוע</string>
+    <string name="gam_puzzles_solved">תרגילים שנפתרו</string>
+    <string name="gam_assignments_done">מטלות שהושלמו</string>
+    <string name="gam_leaderboard">טבלת מובילים</string>
+    <string name="gam_rank">%1$d.</string>
+    <string name="gam_level_xp">רמה %1$d · %2$d נק׳</string>
+    <string name="gam_badge_progress">%1$d / %2$d</string>
+    <string name="gam_no_members">אין עדיין פעילות.</string>
+    <string name="gam_cat_puzzles">תרגילים</string>
+    <string name="gam_cat_assignments">מטלות</string>
+    <string name="gam_cat_tournaments">טורנירים</string>
+    <string name="gam_cat_podium">פודיום</string>
+    <string name="gam_cat_streak">ימי רצף</string>
+
     <string-array name="weekdays">
         <item>יום ראשון</item>
         <item>יום שני</item>

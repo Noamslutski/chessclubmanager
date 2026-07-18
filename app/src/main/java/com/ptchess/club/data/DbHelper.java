@@ -21,7 +21,7 @@ import com.ptchess.club.security.PasswordHasher;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "ptchess.db";
-    private static final int DB_VERSION = 5;
+    private static final int DB_VERSION = 6;
 
     /** The main app admin: extra powers (verify clubs) are keyed to this email. */
     public static final String SUPER_ADMIN_EMAIL = "noamslutski@gmail.com";
@@ -41,6 +41,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public static final String T_NEWS = "news";
     public static final String T_LOGIN_ATTEMPTS = "login_attempts";
     public static final String T_PLAYERS = "club_players";
+    public static final String T_ACTIVITY = "activity_log";
 
     public DbHelper(Context context) {
         super(context.getApplicationContext(), DB_NAME, null, DB_VERSION);
@@ -173,13 +174,23 @@ public class DbHelper extends SQLiteOpenHelper {
                 + "federation TEXT,"
                 + "UNIQUE(club_id, external_id))");
 
+        // Append-only gamification activity log (XP / streaks / badges / leaderboard).
+        db.execSQL("CREATE TABLE " + T_ACTIVITY + " ("
+                + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "club_id INTEGER NOT NULL,"
+                + "user_id INTEGER,"
+                + "email TEXT,"
+                + "type TEXT NOT NULL,"
+                + "date_iso TEXT,"
+                + "ts INTEGER NOT NULL DEFAULT 0)");
+
         seed(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Pre-release: recreate from scratch. A production build must migrate.
-        for (String t : new String[]{T_PLAYERS, T_LOGIN_ATTEMPTS, T_NEWS, T_RESULTS,
+        for (String t : new String[]{T_ACTIVITY, T_PLAYERS, T_LOGIN_ATTEMPTS, T_NEWS, T_RESULTS,
                 T_TOURNAMENTS, T_ASSIGN_STATUS, T_ASSIGNMENTS, T_BOOKS, T_PUZZLES,
                 T_PARENT_CHILD, T_GROUP_MEMBERS, T_GROUPS, T_USERS, T_CLUBS}) {
             db.execSQL("DROP TABLE IF EXISTS " + t);

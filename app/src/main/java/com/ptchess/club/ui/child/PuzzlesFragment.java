@@ -25,6 +25,8 @@ import com.ptchess.club.chess.ChessBoardView;
 import com.ptchess.club.chess.PgnImporter;
 import com.ptchess.club.data.ClubRepository;
 import com.ptchess.club.data.firebase.PuzzleCloud;
+import com.ptchess.club.data.gamification.ActivityLog;
+import com.ptchess.club.data.model.Activity;
 import com.ptchess.club.data.model.Puzzle;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
@@ -314,6 +316,11 @@ public class PuzzlesFragment extends Fragment {
         boardView.setInteractive(false);
         status.setTextColor(getResources().getColor(R.color.success, null));
         status.setText(R.string.puzzle_correct);
+        // Award XP to students for solving.
+        User user = ((MainActivity) requireActivity()).getCurrentUser();
+        if (user.role == Role.CHILD) {
+            ActivityLog.log(requireContext(), user, Activity.PUZZLE);
+        }
     }
 
     private void showHint() {

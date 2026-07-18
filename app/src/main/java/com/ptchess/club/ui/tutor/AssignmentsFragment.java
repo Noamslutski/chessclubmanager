@@ -103,6 +103,11 @@ public class AssignmentsFragment extends Fragment implements AssignmentAdapter.O
     public void onToggleDone(Assignment a) {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         boolean newState = !a.completed;
+        // Award XP the first time a student marks an assignment done.
+        if (newState && user.role == Role.CHILD) {
+            com.ptchess.club.data.gamification.ActivityLog.log(requireContext(), user,
+                    com.ptchess.club.data.model.Activity.ASSIGNMENT);
+        }
         Async.io(() -> {
             repo.markAssignmentDone(a.id, user.id, newState);
             Async.main(this::load);
