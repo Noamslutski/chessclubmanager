@@ -178,6 +178,11 @@ public class RegisterFragment extends Fragment {
                     if (pr.status == ClubRepository.RegisterResult.Status.SUCCESS_PENDING && pr.user != null) {
                         FirebaseProfile.queueRegistration(pr.user.clubId, pr.user.fullName, pr.user.email);
                     }
+                    // Record the verified parent→child link on the cloud profile so it
+                    // follows the parent across devices (childName != null == verified).
+                    if (childName != null && !childEmailStr.isEmpty()) {
+                        FirebaseProfile.addChildEmail(uid, childEmailStr);
+                    }
                     Async.main(() -> handleStatus(pr.status, pr.info));
                 });
             }

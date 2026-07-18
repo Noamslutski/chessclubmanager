@@ -1,11 +1,14 @@
 package com.ptchess.club.data.firebase;
 
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,7 +22,50 @@ public final class FirebaseProfile {
         void onResult(User user); // null when no profile exists
     }
 
+    public interface StringsCb {
+        void onResult(List<String> values);
+    }
+
     private FirebaseProfile() { }
+
+    /**
+     * Records a verified parent→child link on the parent's own profile so the
+     * relationship follows the parent across devices (the {@code childEmails}
+     * array scopes their cloud reads). A parent may only write their own doc.
+     */
+    public static void addChildEmail(String parentUid, String childEmail) {
+        if (parentUid == null || childEmail == null || childEmail.isEmpty()) return;
+        try {
+            Map<String, Object> m = new HashMap<>();
+            m.put("childEmails", FieldValue.arrayUnion(childEmail.trim().toLowerCase()));
+            FirebaseFirestore.getInstance().collection("users").document(parentUid)
+                    .set(m, SetOptions.merge());
+        } catch (Throwable ignored) { }
+    }
+
+    /** Reads the child emails a parent has linked (empty on any failure). */
+    public static void fetchChildEmails(String parentUid, StringsCb cb) {
+        if (parentUid == null) {
+            cb.onResult(new ArrayList<>());
+            return;
+        }
+        try {
+            FirebaseFirestore.getInstance().collection("users").document(parentUid).get()
+                    .addOnSuccessListener(d -> {
+                        List<String> out = new ArrayList<>();
+                        if (d != null && d.exists()) {
+                            Object o = d.get("childEmails");
+                            if (o instanceof List) {
+                                for (Object e : (List<?>) o) if (e != null) out.add(e.toString());
+                            }
+                        }
+                        cb.onResult(out);
+                    })
+                    .addOnFailureListener(e -> cb.onResult(new ArrayList<>()));
+        } catch (Throwable t) {
+            cb.onResult(new ArrayList<>());
+        }
+    }
 
     public static void write(String uid, User u) {
         if (uid == null || u == null) return;

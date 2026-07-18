@@ -203,10 +203,9 @@ emailing the admin on registration and password-reset emails, push notifications
 de-duplication + the super-admin approval queue, and analytics/attendance/gamification dashboards.
 The parse.bot key must be proxied server-side in production rather than shipped in the APK.
 
-One known edge in the Firestore content layer: a **parent's** scoping for groups/assignments/results
-relies on the parent–child links established locally, so those relational lists sync across devices for
-admins, tutors and students but not yet for a parent signing in on a brand-new device (news and library
-sync for everyone). Mirroring parent links to the cloud closes that gap.
+Content in the Firestore layer syncs across devices for every role: verified parent→child links are
+mirrored onto the parent's own profile (`childEmails`), so a parent's groups/assignments/results scope
+correctly even on a brand-new device.
 
 ---
 

@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseAuthService;
+import com.ptchess.club.data.firebase.FirebaseProfile;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.ui.common.UserAdapter;
@@ -127,22 +129,70 @@ public class ChildrenFragment extends Fragment {
                 .setPositiveButton(R.string.save, (d, w) -> {
                     String e = email.getText().toString().trim();
                     String p = password.getText().toString();
-                    ClubRepository repo = ClubRepository.getInstance(requireContext());
-                    Async.io(() -> {
-                        String name = repo.addChildToParent(parent.id, e, p);
-                        Async.main(() -> {
-                            if (!isAdded()) return;
-                            if (name != null) {
-                                UiUtils.toast(requireContext(),
-                                        getString(R.string.msg_parent_linked, name));
-                                load();
-                            } else {
-                                UiUtils.toast(requireContext(), R.string.err_login_failed);
-                            }
-                        });
-                    });
+                    if (FirebaseAuthService.enabled(requireContext())) {
+                        addChildFirebase(e, p);
+                    } else {
+                        addChildLocal(e, p);
+                    }
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private void addChildLocal(String childEmail, String childPassword) {
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
+            String name = repo.addChildToParent(parent.id, childEmail, childPassword);
+            Async.main(() -> {
+                if (!isAdded()) return;
+                if (name != null) {
+                    UiUtils.toast(requireContext(), getString(R.string.msg_parent_linked, name));
+                    load();
+                } else {
+                    UiUtils.toast(requireContext(), R.string.err_login_failed);
+                }
+            });
+        });
+    }
+
+    /**
+     * Under Firebase Auth the child's password lives in Firebase, so we verify with a
+     * secondary session, record the link on the parent's cloud profile (so it follows
+     * the parent across devices), and mirror it locally so this list shows the child.
+     */
+    private void addChildFirebase(String childEmail, String childPassword) {
+        if (childEmail.isEmpty()) {
+            UiUtils.toast(requireContext(), R.string.err_login_failed);
+            return;
+        }
+        FirebaseAuthService.verifyCredentials(requireContext(), childEmail, childPassword,
+                new FirebaseAuthService.AuthCb() {
+                    @Override public void onSuccess(String childUid) {
+                        FirebaseProfile.fetch(childUid, child -> {
+                            if (!isAdded()) return;
+                            if (child == null) {
+                                UiUtils.toast(requireContext(), R.string.err_login_failed);
+                                return;
+                            }
+                            String parentUid = FirebaseAuthService.currentUid();
+                            if (parentUid != null) FirebaseProfile.addChildEmail(parentUid, childEmail);
+                            ClubRepository repo = ClubRepository.getInstance(requireContext());
+                            Async.io(() -> {
+                                long childLocalId = repo.upsertLocalUser(child.fullName, childEmail,
+                                        child.phone, child.role, child.status, child.clubId, child.rating);
+                                repo.linkParentToChild(parent.id, childLocalId);
+                                Async.main(() -> {
+                                    if (!isAdded()) return;
+                                    UiUtils.toast(requireContext(),
+                                            getString(R.string.msg_parent_linked, child.fullName));
+                                    load();
+                                });
+                            });
+                        });
+                    }
+                    @Override public void onError(String message) {
+                        if (isAdded()) UiUtils.toast(requireContext(), R.string.err_login_failed);
+                    }
+                });
     }
 }

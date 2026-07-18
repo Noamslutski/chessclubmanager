@@ -51,9 +51,10 @@ public final class FirebaseContent {
     }
 
     /**
-     * Resolves the child emails used to scope a PARENT's cloud reads (from the local
-     * parent–child links), then invokes {@code cb} on the main thread. For non-parents
-     * it returns {@code null} immediately (no scoping needed).
+     * Resolves the child emails used to scope a PARENT's cloud reads, then invokes
+     * {@code cb} on the main thread. Unions the local parent–child links (same device)
+     * with the {@code childEmails} recorded on the parent's cloud profile (which follows
+     * them to a fresh device). For non-parents it returns {@code null} (no scoping).
      */
     public static void resolveParentKids(Context ctx, User user, ParentKidsCb cb) {
         if (user.role != Role.PARENT) {
@@ -62,11 +63,24 @@ public final class FirebaseContent {
         }
         ClubRepository repo = ClubRepository.getInstance(ctx);
         Async.io(() -> {
-            List<String> emails = new ArrayList<>();
+            List<String> local = new ArrayList<>();
             for (User c : repo.getChildrenForParent(user.id)) {
-                if (c.email != null && !c.email.isEmpty()) emails.add(c.email);
+                if (c.email != null && !c.email.isEmpty()) local.add(c.email.trim().toLowerCase());
             }
-            Async.main(() -> cb.ready(emails));
+            Async.main(() -> {
+                String uid = FirebaseAuthService.currentUid();
+                if (uid == null) {
+                    cb.ready(local);
+                    return;
+                }
+                FirebaseProfile.fetchChildEmails(uid, cloud -> {
+                    java.util.LinkedHashSet<String> union = new java.util.LinkedHashSet<>(local);
+                    if (cloud != null) {
+                        for (String e : cloud) if (e != null && !e.isEmpty()) union.add(e.trim().toLowerCase());
+                    }
+                    cb.ready(new ArrayList<>(union));
+                });
+            });
         });
     }
 
