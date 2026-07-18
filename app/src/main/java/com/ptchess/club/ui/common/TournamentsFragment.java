@@ -22,10 +22,12 @@ import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseContent;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.TournamentResult;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.data.remote.FederationApi;
+import com.ptchess.club.security.InputValidator;
 import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.util.Async;
 import com.ptchess.club.util.UiUtils;
@@ -37,8 +39,10 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Two modes: the player's own tournament <b>results</b>, and <b>registration</b>
@@ -128,17 +132,33 @@ public class TournamentsFragment extends Fragment {
         loadingBar.setVisibility(View.VISIBLE);
         emptyView.setVisibility(View.GONE);
         boolean showChild = user.role != Role.CHILD;
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.resolveParentKids(requireContext(), user, kids ->
+                    FirebaseContent.fetchResults(user, kids, new FirebaseContent.ResultsCb() {
+                        @Override public void ok(List<TournamentResult> results) {
+                            renderResults(results, showChild);
+                        }
+                        @Override public void fail() { loadResultsLocal(showChild); }
+                    }));
+        } else {
+            loadResultsLocal(showChild);
+        }
+    }
+
+    private void loadResultsLocal(boolean showChild) {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<TournamentResult> results = repo.getResultsForUser(user);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                loadingBar.setVisibility(View.GONE);
-                recycler.setAdapter(new ResultAdapter(results, showChild));
-                emptyView.setText(R.string.no_results);
-                emptyView.setVisibility(results.isEmpty() ? View.VISIBLE : View.GONE);
-            });
+            Async.main(() -> renderResults(results, showChild));
         });
+    }
+
+    private void renderResults(List<TournamentResult> results, boolean showChild) {
+        if (!isAdded()) return;
+        loadingBar.setVisibility(View.GONE);
+        recycler.setAdapter(new ResultAdapter(results, showChild));
+        emptyView.setText(R.string.no_results);
+        emptyView.setVisibility(results.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     // ------------------------------------------------------------ federation
@@ -225,16 +245,68 @@ public class TournamentsFragment extends Fragment {
 
     private void onCsvPicked(@Nullable Uri uri) {
         if (uri == null) return;
-        ClubRepository repo = ClubRepository.getInstance(requireContext());
         long clubId = user.clubId;
         Async.io(() -> {
             String csv = readText(uri);
+            Async.main(() -> {
+                if (!isAdded()) return;
+                if (FirebaseContent.enabled(requireContext())) importCsvCloud(clubId, csv);
+                else importCsvLocal(clubId, csv);
+            });
+        });
+    }
+
+    private void importCsvLocal(long clubId, String csv) {
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
             int added = repo.importResultsCsv(clubId, csv);
             Async.main(() -> {
                 if (!isAdded()) return;
                 UiUtils.toast(requireContext(), "CSV: +" + added);
                 if (resultsMode) loadResults();
             });
+        });
+    }
+
+    /**
+     * Cloud import: map each CSV row's email to a club student (from the cloud
+     * directory), then write the results as one batch keyed by child email.
+     */
+    private void importCsvCloud(long clubId, String csv) {
+        FirebaseContent.clubUsersByRole(clubId, Role.CHILD, new FirebaseContent.UsersCb() {
+            @Override public void ok(List<User> children) {
+                Map<String, String> nameByEmail = new HashMap<>();
+                for (User c : children) {
+                    if (c.email != null) nameByEmail.put(c.email.trim().toLowerCase(), c.fullName);
+                }
+                List<FirebaseContent.ResultRow> rows = new ArrayList<>();
+                for (String rawLine : csv.split("\\r?\\n")) {
+                    String line = rawLine.trim();
+                    if (line.isEmpty()) continue;
+                    String[] cols = line.split(",");
+                    if (cols.length < 6) continue;
+                    String email = InputValidator.normalizeEmail(cols[0].trim());
+                    if (!InputValidator.isValidEmail(email)) continue; // also skips a header row
+                    String name = nameByEmail.get(email);
+                    if (name == null) continue; // not a student of this club
+                    try {
+                        rows.add(new FirebaseContent.ResultRow(cols[1].trim(), cols[2].trim(),
+                                email, name, Double.parseDouble(cols[3].trim()),
+                                Integer.parseInt(cols[4].trim()), Integer.parseInt(cols[5].trim())));
+                    } catch (NumberFormatException ignored) {
+                        // malformed numeric cell — skip this row
+                    }
+                }
+                FirebaseContent.importResults(clubId, rows, added -> {
+                    if (!isAdded()) return;
+                    UiUtils.toast(requireContext(), "CSV: +" + added);
+                    if (resultsMode) loadResults();
+                });
+            }
+            @Override public void fail() {
+                // Directory unreachable — fall back to the local import path.
+                if (isAdded()) importCsvLocal(clubId, csv);
+            }
         });
     }
 

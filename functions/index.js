@@ -152,6 +152,9 @@ exports.setUserClaims = onDocumentWritten("users/{uid}", async (event) => {
   const claims = {
     role: after.role || "CHILD",
     clubId: after.clubId || 0,
+    // String form so path-based rules (clubs/{clubId}/…, Storage logos/{clubId}/…)
+    // can compare against the string path segment.
+    clubIdStr: String(after.clubId || 0),
   };
   try {
     await admin.auth().setCustomUserClaims(uid, claims);

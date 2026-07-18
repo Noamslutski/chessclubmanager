@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseContent;
 import com.ptchess.club.data.firebase.FirebaseFiles;
 import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.Group;
@@ -74,15 +75,28 @@ public class AssignmentsFragment extends Fragment implements AssignmentAdapter.O
     }
 
     private void load() {
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.loadAssignments(requireContext(), user, new FirebaseContent.AssignmentsCb() {
+                @Override public void ok(List<Assignment> list) { render(list); }
+                @Override public void fail() { loadLocal(); }
+            });
+        } else {
+            loadLocal();
+        }
+    }
+
+    private void loadLocal() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<Assignment> list = repo.getAssignmentsForUser(user);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                recycler.setAdapter(new AssignmentAdapter(list, user.role == Role.CHILD, this));
-                emptyView.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
-            });
+            Async.main(() -> render(list));
         });
+    }
+
+    private void render(List<Assignment> list) {
+        if (!isAdded()) return;
+        recycler.setAdapter(new AssignmentAdapter(list, user.role == Role.CHILD, this));
+        emptyView.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -112,18 +126,32 @@ public class AssignmentsFragment extends Fragment implements AssignmentAdapter.O
 
     private void showAddAssignment() {
         pickedUri = null;
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.resolveParentKids(requireContext(), user, kids ->
+                    FirebaseContent.fetchGroups(user, kids, new FirebaseContent.GroupsCb() {
+                        @Override public void ok(List<Group> groups) { onGroupsForAssign(groups); }
+                        @Override public void fail() { loadGroupsLocalForAssign(); }
+                    }));
+        } else {
+            loadGroupsLocalForAssign();
+        }
+    }
+
+    private void loadGroupsLocalForAssign() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<Group> groups = repo.getGroupsForUser(user);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                if (groups.isEmpty()) {
-                    UiUtils.toast(requireContext(), R.string.no_groups);
-                    return;
-                }
-                buildAddDialog(groups);
-            });
+            Async.main(() -> onGroupsForAssign(groups));
         });
+    }
+
+    private void onGroupsForAssign(List<Group> groups) {
+        if (!isAdded()) return;
+        if (groups.isEmpty()) {
+            UiUtils.toast(requireContext(), R.string.no_groups);
+            return;
+        }
+        buildAddDialog(groups);
     }
 
     private void buildAddDialog(List<Group> groups) {
@@ -158,11 +186,17 @@ public class AssignmentsFragment extends Fragment implements AssignmentAdapter.O
                     // Upload the attachment to Storage first (if Firebase is on), then save the
                     // assignment with the resulting URL; without Firebase the local URI is kept.
                     resolveUpload(pickedUri, fileUrl -> {
-                        ClubRepository repo = ClubRepository.getInstance(requireContext());
-                        Async.io(() -> {
-                            repo.addAssignment(user.clubId, g.id, t, description, fileUrl, dueDate, user.id);
-                            Async.main(this::load);
-                        });
+                        if (g.cloudId != null) {
+                            FirebaseContent.addAssignment(user.clubId, g.cloudId, g.name, t,
+                                    description, fileUrl, dueDate, user.fullName, this::load);
+                        } else {
+                            ClubRepository repo = ClubRepository.getInstance(requireContext());
+                            Async.io(() -> {
+                                repo.addAssignment(user.clubId, g.id, t, description, fileUrl,
+                                        dueDate, user.id);
+                                Async.main(this::load);
+                            });
+                        }
                     });
                 })
                 .setNegativeButton(R.string.cancel, null)

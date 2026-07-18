@@ -6,6 +6,7 @@ public class TournamentResult {
     public String date;
     public long childId;
     public String childName;
+    public String childEmail = ""; // cloud scoping key (empty in local-only mode)
     public double points;
     public int games;
     public int standing;

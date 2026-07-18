@@ -156,7 +156,7 @@ auto-updating cloud layer — including the **scheduled Lichess puzzle ingestion
 
 ```
 functions/            Cloud Functions (Node 20)
-  index.js              ingestLichessPuzzles (scheduled) + notifyAdminOnRegistration
+  index.js              ingestLichessPuzzles (scheduled) · notifyAdminOnRegistration · setUserClaims
 firestore.rules       role-based Firestore security (Auth custom claims)
 storage.rules         file access rules (logos / library / assignments)
 firebase.json         deploy config    ·    .firebaserc  (set your project id)
@@ -187,6 +187,11 @@ firebase.json         deploy config    ·    .firebaserc  (set your project id)
 - 📥 **Library PDFs, club logos/banners and assignment files upload to Firebase Storage** and are
   served from their download URLs (club members read, staff/admins write — enforced by `storage.rules`).
   Without Firebase the same pickers store the local file URI and everything still works on-device.
+- ☁️ **Per-club content syncs through Firestore** — news, library, groups, assignments and tournament
+  results live under `clubs/{clubId}/…` and sync across devices (the SDK caches them offline too).
+  Docs are denormalised and **email-keyed**, so who sees what (a student's own groups, a tutor's
+  roster, a parent's children) is decided by `ContentScope` — a small, unit-tested pure function —
+  with no cross-device id juggling. Without Firebase, the same screens read the local SQLite store.
 
 > **Billing:** the scheduled function needs the **Blaze** plan (generous free tier — this
 > workload is effectively free). Firestore/Storage/Auth work on the free Spark plan.
@@ -194,9 +199,14 @@ firebase.json         deploy config    ·    .firebaserc  (set your project id)
 ## 🛣 Roadmap &amp; limitations (need a backend)
 
 The following are intentionally **not faked** and require a backend/data pipeline to be real:
-emailing the admin on registration and password-reset emails, true cross-device sync, push notifications,
-cross-owner roster de-duplication + the super-admin approval queue, and analytics/attendance/gamification
-dashboards. The parse.bot key must be proxied server-side in production rather than shipped in the APK.
+emailing the admin on registration and password-reset emails, push notifications, cross-owner roster
+de-duplication + the super-admin approval queue, and analytics/attendance/gamification dashboards.
+The parse.bot key must be proxied server-side in production rather than shipped in the APK.
+
+One known edge in the Firestore content layer: a **parent's** scoping for groups/assignments/results
+relies on the parent–child links established locally, so those relational lists sync across devices for
+admins, tutors and students but not yet for a parent signing in on a brand-new device (news and library
+sync for everyone). Mirroring parent links to the cloud closes that gap.
 
 ---
 

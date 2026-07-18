@@ -730,7 +730,7 @@ public final class ClubRepository {
         return out;
     }
 
-    private boolean isAssignmentDone(long assignmentId, long childId) {
+    public boolean isAssignmentDone(long assignmentId, long childId) {
         SQLiteDatabase db = helper.getReadableDatabase();
         try (Cursor c = db.query(DbHelper.T_ASSIGN_STATUS, new String[]{"completed"},
                 "assignment_id = ? AND child_id = ?",

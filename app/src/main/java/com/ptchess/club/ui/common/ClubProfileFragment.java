@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseContent;
 import com.ptchess.club.data.firebase.FirebaseFiles;
 import com.ptchess.club.data.model.Club;
 import com.ptchess.club.data.model.Group;
@@ -69,11 +70,32 @@ public class ClubProfileFragment extends Fragment {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             Club c = repo.getClub(user.clubId);
-            List<Group> groups = repo.getClubGroups(user.clubId);
             Async.main(() -> {
                 if (!isAdded() || c == null) return;
                 club = c;
-                bind(groups);
+                loadSchedule();
+            });
+        });
+    }
+
+    /** Weekly schedule is built from the club's groups — from Firestore when enabled. */
+    private void loadSchedule() {
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.fetchClubGroups(user.clubId, new FirebaseContent.GroupsCb() {
+                @Override public void ok(List<Group> groups) { if (isAdded()) bind(groups); }
+                @Override public void fail() { loadScheduleLocal(); }
+            });
+        } else {
+            loadScheduleLocal();
+        }
+    }
+
+    private void loadScheduleLocal() {
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
+        Async.io(() -> {
+            List<Group> groups = repo.getClubGroups(user.clubId);
+            Async.main(() -> {
+                if (isAdded()) bind(groups);
             });
         });
     }

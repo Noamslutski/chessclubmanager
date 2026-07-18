@@ -1,18 +1,20 @@
 rules_version = '2';
 
-// Access is driven by Firebase Auth custom claims (clubId, role) set by a
-// Cloud Function when an account is approved. Until the app migrates its login
-// to Firebase Auth these rules block direct client access — the Cloud Functions
-// use the Admin SDK, which bypasses rules, so server-side ingestion still works.
+// Access is driven by Firebase Auth custom claims (clubId, clubIdStr, role) set
+// by the setUserClaims Cloud Function. The app now signs in with Firebase Auth and
+// reads/writes per-club content directly under clubs/{clubId}/… ; Cloud Functions
+// use the Admin SDK (which bypasses rules) for scheduled ingestion.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
-    function myClub() { return request.auth.token.clubId; }
+    function myClub() { return request.auth.token.clubId; }         // numeric (data comparisons)
+    function myClubStr() { return request.auth.token.clubIdStr; }   // string (path comparisons)
     function myRole() { return request.auth.token.role; }
     function isStaff() { return myRole() == "TUTOR" || myRole() == "ADMIN"; }
     function isAdmin() { return myRole() == "ADMIN"; }
-    function inClub(clubId) { return signedIn() && myClub() == clubId; }
+    // clubId here is a path segment (a string), so compare against the string claim.
+    function inClub(clubId) { return signedIn() && myClubStr() == clubId; }
 
     // Shared puzzle pool — non-sensitive reference content, so publicly readable
     // (the app reads it before migrating to Firebase Auth). Written only by the

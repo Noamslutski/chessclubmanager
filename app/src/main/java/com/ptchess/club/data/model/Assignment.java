@@ -11,6 +11,10 @@ public class Assignment {
     public String createdByName;
     public boolean completed;   // for the current viewing student
 
+    // Cloud (Firestore) fields — null in local-only mode.
+    public String cloudId;      // assignment doc id when loaded from Firestore
+    public String groupCloudId; // cloud id of the owning group
+
     public Assignment(long id, long groupId, String groupName, String title,
                       String description, String fileUri, String dueDate,
                       String createdByName, boolean completed) {

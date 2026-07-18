@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseContent;
 import com.ptchess.club.data.model.Group;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
@@ -25,6 +26,7 @@ import com.ptchess.club.ui.MainActivity;
 import com.ptchess.club.util.Async;
 import com.ptchess.club.util.UiUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GroupsFragment extends Fragment {
@@ -60,15 +62,29 @@ public class GroupsFragment extends Fragment {
     }
 
     private void load() {
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.resolveParentKids(requireContext(), user, kids ->
+                    FirebaseContent.fetchGroups(user, kids, new FirebaseContent.GroupsCb() {
+                        @Override public void ok(List<Group> groups) { render(groups); }
+                        @Override public void fail() { loadLocal(); }
+                    }));
+        } else {
+            loadLocal();
+        }
+    }
+
+    private void loadLocal() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<Group> groups = repo.getGroupsForUser(user);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                recycler.setAdapter(new GroupAdapter(groups, this::showGroup));
-                emptyView.setVisibility(groups.isEmpty() ? View.VISIBLE : View.GONE);
-            });
+            Async.main(() -> render(groups));
         });
+    }
+
+    private void render(List<Group> groups) {
+        if (!isAdded()) return;
+        recycler.setAdapter(new GroupAdapter(groups, this::showGroup));
+        emptyView.setVisibility(groups.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void showGroup(Group g) {
@@ -79,7 +95,15 @@ public class GroupsFragment extends Fragment {
         sb.append(getString(R.string.group_when, day, g.time)).append("\n\n");
 
         boolean staff = user.role == Role.ADMIN || user.role == Role.TUTOR;
-        if (staff) {
+        if (!staff) {
+            dialog(g, sb.toString());
+            return;
+        }
+        if (g.cloudId != null) {
+            // Cloud group — member names are denormalised on the document.
+            for (String n : g.memberNames) sb.append("• ").append(n).append('\n');
+            dialog(g, sb.toString());
+        } else {
             ClubRepository repo = ClubRepository.getInstance(requireContext());
             Async.io(() -> {
                 List<User> members = repo.getGroupMembers(g.id);
@@ -87,8 +111,6 @@ public class GroupsFragment extends Fragment {
                 for (User m : members) body.append("• ").append(m.fullName).append('\n');
                 Async.main(() -> dialog(g, body.toString()));
             });
-        } else {
-            dialog(g, sb.toString());
         }
     }
 
@@ -109,18 +131,31 @@ public class GroupsFragment extends Fragment {
     // ---------------------------------------------------------- add group
 
     private void showAddGroup() {
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.clubUsersByRole(user.clubId, Role.TUTOR, new FirebaseContent.UsersCb() {
+                @Override public void ok(List<User> tutors) { onTutorsLoaded(tutors); }
+                @Override public void fail() { loadTutorsLocal(); }
+            });
+        } else {
+            loadTutorsLocal();
+        }
+    }
+
+    private void loadTutorsLocal() {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<User> tutors = repo.getClubUsersByRole(user.clubId, Role.TUTOR);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                if (tutors.isEmpty()) {
-                    UiUtils.toast(requireContext(), R.string.no_tutors);
-                    return;
-                }
-                buildAddGroupDialog(tutors);
-            });
+            Async.main(() -> onTutorsLoaded(tutors));
         });
+    }
+
+    private void onTutorsLoaded(List<User> tutors) {
+        if (!isAdded()) return;
+        if (tutors.isEmpty()) {
+            UiUtils.toast(requireContext(), R.string.no_tutors);
+            return;
+        }
+        buildAddGroupDialog(tutors);
     }
 
     private void buildAddGroupDialog(List<User> tutors) {
@@ -144,12 +179,17 @@ public class GroupsFragment extends Fragment {
                     if (name.isEmpty()) return;
                     int dayIndex = daySpinner.getSelectedItemPosition();
                     String time = timeField.getText().toString().trim();
-                    long tutorId = tutors.get(tutorSpinner.getSelectedItemPosition()).id;
-                    ClubRepository repo = ClubRepository.getInstance(requireContext());
-                    Async.io(() -> {
-                        repo.addGroup(user.clubId, name, dayIndex, time, tutorId);
-                        Async.main(this::load);
-                    });
+                    User tutor = tutors.get(tutorSpinner.getSelectedItemPosition());
+                    if (FirebaseContent.enabled(requireContext())) {
+                        FirebaseContent.addGroup(user.clubId, name, dayIndex, time,
+                                tutor.email, tutor.fullName, this::load);
+                    } else {
+                        ClubRepository repo = ClubRepository.getInstance(requireContext());
+                        Async.io(() -> {
+                            repo.addGroup(user.clubId, name, dayIndex, time, tutor.id);
+                            Async.main(this::load);
+                        });
+                    }
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
@@ -158,43 +198,76 @@ public class GroupsFragment extends Fragment {
     // ---------------------------------------------------------- add members
 
     private void showAddMembers(Group g) {
+        if (g.cloudId != null) {
+            FirebaseContent.clubUsersByRole(user.clubId, Role.CHILD, new FirebaseContent.UsersCb() {
+                @Override public void ok(List<User> children) { pickMembers(g, children); }
+                @Override public void fail() { loadChildrenLocal(g); }
+            });
+        } else {
+            loadChildrenLocal(g);
+        }
+    }
+
+    private void loadChildrenLocal(Group g) {
         ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<User> children = repo.getClubUsersByRole(user.clubId, Role.CHILD);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                if (children.isEmpty()) {
-                    UiUtils.toast(requireContext(), R.string.no_results);
-                    return;
-                }
-                String[] names = new String[children.size()];
-                boolean[] checked = new boolean[children.size()];
-                for (int i = 0; i < children.size(); i++) names[i] = children.get(i).fullName;
-
-                new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                        .setTitle(R.string.add_member)
-                        .setMultiChoiceItems(names, checked, (d, which, isChecked) ->
-                                checked[which] = isChecked)
-                        .setPositiveButton(R.string.save, (d, w) -> Async.io(() -> {
-                            int count = 0;
-                            for (int i = 0; i < children.size(); i++) {
-                                if (checked[i]) {
-                                    repo.addGroupMember(g.id, children.get(i).id);
-                                    count++;
-                                }
-                            }
-                            int finalCount = count;
-                            Async.main(() -> {
-                                if (!isAdded()) return;
-                                UiUtils.toast(requireContext(),
-                                        getString(R.string.members_added, finalCount));
-                                load();
-                            });
-                        }))
-                        .setNegativeButton(R.string.cancel, null)
-                        .show();
-            });
+            Async.main(() -> pickMembers(g, children));
         });
+    }
+
+    private void pickMembers(Group g, List<User> children) {
+        if (!isAdded()) return;
+        if (children.isEmpty()) {
+            UiUtils.toast(requireContext(), R.string.no_results);
+            return;
+        }
+        String[] names = new String[children.size()];
+        boolean[] checked = new boolean[children.size()];
+        for (int i = 0; i < children.size(); i++) names[i] = children.get(i).fullName;
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(R.string.add_member)
+                .setMultiChoiceItems(names, checked, (d, which, isChecked) -> checked[which] = isChecked)
+                .setPositiveButton(R.string.save, (d, w) -> saveMembers(g, children, checked))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void saveMembers(Group g, List<User> children, boolean[] checked) {
+        if (g.cloudId != null) {
+            List<String> emails = new ArrayList<>();
+            List<String> names = new ArrayList<>();
+            for (int i = 0; i < children.size(); i++) {
+                if (checked[i]) {
+                    emails.add(children.get(i).email);
+                    names.add(children.get(i).fullName);
+                }
+            }
+            if (emails.isEmpty()) return;
+            FirebaseContent.addGroupMembers(user.clubId, g.cloudId, emails, names, () -> {
+                if (!isAdded()) return;
+                UiUtils.toast(requireContext(), getString(R.string.members_added, emails.size()));
+                load();
+            });
+        } else {
+            ClubRepository repo = ClubRepository.getInstance(requireContext());
+            Async.io(() -> {
+                int count = 0;
+                for (int i = 0; i < children.size(); i++) {
+                    if (checked[i]) {
+                        repo.addGroupMember(g.id, children.get(i).id);
+                        count++;
+                    }
+                }
+                int finalCount = count;
+                Async.main(() -> {
+                    if (!isAdded()) return;
+                    UiUtils.toast(requireContext(), getString(R.string.members_added, finalCount));
+                    load();
+                });
+            });
+        }
     }
 
     private ArrayAdapter<String> spinner(String[] items) {

@@ -7,7 +7,8 @@ service firebase.storage {
   match /b/{bucket}/o {
 
     function signedIn() { return request.auth != null; }
-    function inClub(clubId) { return signedIn() && request.auth.token.clubId == clubId; }
+    // clubId is a path segment (string); compare against the string form of the claim.
+    function inClub(clubId) { return signedIn() && request.auth.token.clubIdStr == clubId; }
     function isStaff() { return signedIn()
         && (request.auth.token.role == "TUTOR" || request.auth.token.role == "ADMIN"); }
     function isAdmin() { return signedIn() && request.auth.token.role == "ADMIN"; }

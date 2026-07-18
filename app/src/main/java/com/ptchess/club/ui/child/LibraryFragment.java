@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseContent;
 import com.ptchess.club.data.firebase.FirebaseFiles;
 import com.ptchess.club.data.model.Book;
 import com.ptchess.club.data.model.Role;
@@ -73,16 +74,29 @@ public class LibraryFragment extends Fragment implements BookAdapter.OnBookActio
     }
 
     private void load() {
-        ClubRepository repo = ClubRepository.getInstance(requireContext());
         long clubId = ((MainActivity) requireActivity()).getCurrentUser().clubId;
+        if (FirebaseContent.enabled(requireContext())) {
+            FirebaseContent.fetchBooks(clubId, new FirebaseContent.BooksCb() {
+                @Override public void ok(List<Book> books) { renderBooks(books); }
+                @Override public void fail() { loadLocal(clubId); }
+            });
+        } else {
+            loadLocal(clubId);
+        }
+    }
+
+    private void loadLocal(long clubId) {
+        ClubRepository repo = ClubRepository.getInstance(requireContext());
         Async.io(() -> {
             List<Book> books = repo.getBooks(clubId);
-            Async.main(() -> {
-                if (!isAdded()) return;
-                recycler.setAdapter(new BookAdapter(books, this));
-                emptyView.setVisibility(books.isEmpty() ? View.VISIBLE : View.GONE);
-            });
+            Async.main(() -> renderBooks(books));
         });
+    }
+
+    private void renderBooks(List<Book> books) {
+        if (!isAdded()) return;
+        recycler.setAdapter(new BookAdapter(books, this));
+        emptyView.setVisibility(books.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -140,12 +154,17 @@ public class LibraryFragment extends Fragment implements BookAdapter.OnBookActio
                     // Upload the PDF to Storage first (if Firebase is on), then save the book
                     // with the resulting URL; without Firebase the local URI is kept.
                     resolveUpload(pickedUri, fileUrl -> {
-                        ClubRepository repo = ClubRepository.getInstance(requireContext());
-                        Async.io(() -> {
-                            repo.addBook(user.clubId, t, authorTxt, languageTxt, categoryKey, sideKey,
-                                    min, max, fileUrl, user.id);
-                            Async.main(this::load);
-                        });
+                        if (FirebaseContent.enabled(requireContext())) {
+                            FirebaseContent.addBook(user.clubId, t, authorTxt, languageTxt,
+                                    categoryKey, sideKey, min, max, fileUrl, this::load);
+                        } else {
+                            ClubRepository repo = ClubRepository.getInstance(requireContext());
+                            Async.io(() -> {
+                                repo.addBook(user.clubId, t, authorTxt, languageTxt, categoryKey,
+                                        sideKey, min, max, fileUrl, user.id);
+                                Async.main(this::load);
+                            });
+                        }
                     });
                 })
                 .setNegativeButton(R.string.cancel, null)
