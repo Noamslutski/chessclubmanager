@@ -10,6 +10,12 @@
  *    document is created (via the Firebase "Trigger Email" extension, which
  *    delivers any document written to the `mail` collection).
  *
+ *  - setUserClaims: mirrors a user's role/clubId into Auth custom claims.
+ *
+ *  - notifyOnNews / notifyOnAssignment / notifyOnApproval: send FCM push
+ *    notifications on new club news, new assignments (to the group's students
+ *    and parents), and account approval. Stale tokens are pruned automatically.
+ *
  * Deploy:  firebase deploy --only functions
  */
 
@@ -205,3 +211,90 @@ exports.notifyAdminOnRegistration = onDocumentCreated(
     logger.info("Queued registration email to " + adminEmail);
   }
 );
+
+// ---------------------------------------------------------------------------
+// Push notifications (Firebase Cloud Messaging)
+// ---------------------------------------------------------------------------
+
+// Flattens users' fcmTokens into {token, ref} pairs so stale tokens can be pruned.
+function collectTokenPairs(userDocs) {
+  const pairs = [];
+  userDocs.forEach((doc) => {
+    const toks = doc.get("fcmTokens");
+    if (Array.isArray(toks)) {
+      toks.forEach((t) => { if (t) pairs.push({ token: t, ref: doc.ref }); });
+    }
+  });
+  return pairs;
+}
+
+// Sends one notification to every token of the given user docs, pruning any
+// tokens the FCM backend reports as dead.
+async function pushToUsers(userDocs, title, body, data) {
+  const pairs = collectTokenPairs(userDocs);
+  if (pairs.length === 0) return;
+  const message = {
+    tokens: pairs.map((p) => p.token),
+    notification: { title, body },
+    data: data || {},
+    android: { priority: "high", notification: { channelId: "ptchess_general" } },
+  };
+  const res = await admin.messaging().sendEachForMulticast(message);
+  const stale = new Set([
+    "messaging/registration-token-not-registered",
+    "messaging/invalid-registration-token",
+    "messaging/invalid-argument",
+  ]);
+  const removals = [];
+  res.responses.forEach((r, i) => {
+    if (!r.success && r.error && stale.has(r.error.code)) {
+      removals.push(pairs[i].ref.set(
+        { fcmTokens: admin.firestore.FieldValue.arrayRemove(pairs[i].token) },
+        { merge: true }));
+    }
+  });
+  await Promise.all(removals);
+  logger.info(`Push "${title}" -> ${pairs.length} tokens, ${res.successCount} delivered`);
+}
+
+// New club news -> everyone in the club.
+exports.notifyOnNews = onDocumentCreated("clubs/{clubId}/news/{newsId}", async (event) => {
+  const clubId = Number(event.params.clubId);
+  const data = event.data && event.data.data();
+  if (!data) return;
+  const users = await db.collection("users").where("clubId", "==", clubId).get();
+  await pushToUsers(users.docs, data.title || "עדכון מועדון · Club news",
+    data.body || data.title || "", { type: "news" });
+});
+
+// New assignment -> the group's students and their parents.
+exports.notifyOnAssignment = onDocumentCreated("clubs/{clubId}/assignments/{aId}", async (event) => {
+  const clubId = Number(event.params.clubId);
+  const data = event.data && event.data.data();
+  if (!data || !data.groupCloudId) return;
+  const g = await db.collection("clubs").doc(String(clubId))
+    .collection("groups").doc(data.groupCloudId).get();
+  if (!g.exists) return;
+  const members = new Set((g.get("memberEmails") || []).map((e) => String(e).toLowerCase()));
+  if (members.size === 0) return;
+  const users = await db.collection("users").where("clubId", "==", clubId).get();
+  const targets = users.docs.filter((doc) => {
+    const email = String(doc.get("email") || "").toLowerCase();
+    if (members.has(email)) return true; // the student
+    const kids = doc.get("childEmails");
+    return Array.isArray(kids) && kids.some((k) => members.has(String(k).toLowerCase())); // their parent
+  });
+  await pushToUsers(targets, "מטלה חדשה · New assignment", data.title || "", { type: "assignment" });
+});
+
+// Account approved (status flips to ACTIVE) -> that user.
+exports.notifyOnApproval = onDocumentWritten("users/{uid}", async (event) => {
+  const before = event.data.before && event.data.before.data();
+  const after = event.data.after && event.data.after.data();
+  if (!after) return;
+  const wasActive = before && before.status === "ACTIVE";
+  if (after.status === "ACTIVE" && !wasActive) {
+    await pushToUsers([event.data.after], "התקבלת! · You're in",
+      "Your account was approved — welcome to the club!", { type: "approved" });
+  }
+});

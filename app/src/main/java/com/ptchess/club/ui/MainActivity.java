@@ -1,15 +1,22 @@
 package com.ptchess.club.ui;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.PushTokens;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.security.SessionManager;
 import com.ptchess.club.ui.auth.AuthActivity;
@@ -26,6 +33,7 @@ public class MainActivity extends BaseActivity {
     private MaterialToolbar toolbar;
     private BottomNavigationView bottomNav;
     private User currentUser;
+    private ActivityResultLauncher<String> notifPermLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +69,21 @@ public class MainActivity extends BaseActivity {
 
         if (savedInstanceState == null) {
             bottomNav.setSelectedItemId(R.id.nav_home);
+        }
+
+        // Push notifications: register this device's token and (on Android 13+)
+        // ask for permission. Both no-op when Firebase isn't configured.
+        notifPermLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(), granted -> { });
+        requestNotificationsIfNeeded();
+        PushTokens.register(this);
+    }
+
+    private void requestNotificationsIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
     }
 
@@ -107,6 +130,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public void logout() {
+        PushTokens.removeCurrentToken(this); // stop pushes to this device for this user
         new SessionManager(this).clear();
         com.ptchess.club.data.firebase.FirebaseAuthService.signOut();
         Intent i = new Intent(this, AuthActivity.class);

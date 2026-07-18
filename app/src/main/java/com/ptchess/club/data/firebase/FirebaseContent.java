@@ -8,6 +8,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.ptchess.club.data.model.Activity;
 import com.ptchess.club.data.model.Assignment;
 import com.ptchess.club.data.model.Book;
@@ -509,6 +510,37 @@ public final class FirebaseContent {
     }
 
     // ============================================================ DIRECTORY
+
+    /**
+     * Mirrors an admin action (approve / reject / role change) onto the member's
+     * cloud profile, found by email within the club. Keeping the cloud copy in sync
+     * lets the member sign in on a new device and triggers the approval push /
+     * claim refresh. Admins may write same-club user docs (per the rules).
+     */
+    public static void updateMemberByEmail(long clubId, String email, Map<String, Object> fields,
+                                           Runnable onComplete) {
+        if (email == null || email.isEmpty()) {
+            run(onComplete);
+            return;
+        }
+        String key = email.trim().toLowerCase();
+        try {
+            FirebaseFirestore.getInstance().collection("users")
+                    .whereEqualTo("clubId", clubId).get()
+                    .addOnSuccessListener(qs -> {
+                        for (DocumentSnapshot d : qs.getDocuments()) {
+                            if (key.equals(str(d, "email").trim().toLowerCase())) {
+                                d.getReference().set(fields, SetOptions.merge());
+                                break;
+                            }
+                        }
+                        run(onComplete);
+                    })
+                    .addOnFailureListener(e -> run(onComplete));
+        } catch (Throwable t) {
+            run(onComplete);
+        }
+    }
 
     /** Club members of a given role, read from the cloud user directory (admin-only by rules). */
     public static void clubUsersByRole(long clubId, Role role, UsersCb cb) {

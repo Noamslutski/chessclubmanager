@@ -279,6 +279,10 @@
     <string name="gam_cat_podium">פודיום</string>
     <string name="gam_cat_streak">ימי רצף</string>
 
+    <!-- Notifications -->
+    <string name="notif_channel_name">עדכוני מועדון</string>
+    <string name="notif_channel_desc">חדשות, מטלות ואישורי חשבון</string>
+
     <string-array name="weekdays">
         <item>יום ראשון</item>
         <item>יום שני</item>

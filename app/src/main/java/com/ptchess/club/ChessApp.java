@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.push.Notifications;
 import com.ptchess.club.util.Async;
 import com.ptchess.club.util.LocaleHelper;
 
@@ -24,5 +25,6 @@ public class ChessApp extends Application {
         // Warm the DB off the main thread so first-run seeding (which hashes the
         // demo passwords with PBKDF2) never blocks the UI.
         Async.io(() -> ClubRepository.getInstance(getApplicationContext()).getAnyAdmin());
+        Notifications.ensureChannel(this);
     }
 }

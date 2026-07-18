@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.ptchess.club.R;
 import com.ptchess.club.data.ClubRepository;
+import com.ptchess.club.data.firebase.FirebaseContent;
 import com.ptchess.club.data.model.Role;
 import com.ptchess.club.data.model.User;
 import com.ptchess.club.ui.MainActivity;
@@ -22,7 +23,9 @@ import com.ptchess.club.ui.common.UserAdapter;
 import com.ptchess.club.util.Async;
 import com.ptchess.club.util.UiUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Admin center: approve/reject pending registrations and change user roles. */
 public class AdminFragment extends Fragment {
@@ -78,6 +81,7 @@ public class AdminFragment extends Fragment {
             primary.setText(R.string.approve);
             primary.setOnClickListener(v -> Async.io(() -> {
                 repo.approveUser(user.id);
+                mirrorStatus(user, User.STATUS_ACTIVE);
                 Async.main(this::load);
             }));
 
@@ -87,6 +91,7 @@ public class AdminFragment extends Fragment {
                     .setMessage(getString(R.string.confirm_reject, user.fullName))
                     .setPositiveButton(R.string.reject, (d, w) -> Async.io(() -> {
                         repo.rejectUser(user.id);
+                        mirrorStatus(user, User.STATUS_REJECTED);
                         Async.main(this::load);
                     }))
                     .setNegativeButton(R.string.cancel, null)
@@ -97,6 +102,19 @@ public class AdminFragment extends Fragment {
             primary.setOnClickListener(v -> showRolePicker(user));
             secondary.setVisibility(View.GONE);
         }
+    }
+
+    /** Mirrors an approve/reject action onto the member's cloud profile. */
+    private void mirrorStatus(User user, String status) {
+        mirrorField(user, "status", status);
+    }
+
+    private void mirrorField(User user, String field, String value) {
+        android.content.Context ctx = getContext(); // may be called off the main thread
+        if (ctx == null || !FirebaseContent.enabled(ctx)) return;
+        Map<String, Object> m = new HashMap<>();
+        m.put(field, value);
+        FirebaseContent.updateMemberByEmail(user.clubId, user.email, m, null);
     }
 
     private void showRolePicker(User user) {
@@ -116,6 +134,7 @@ public class AdminFragment extends Fragment {
                     ClubRepository repo = ClubRepository.getInstance(requireContext());
                     Async.io(() -> {
                         repo.setRole(user.id, newRole);
+                        mirrorField(user, "role", newRole.name());
                         Async.main(() -> {
                             UiUtils.toast(requireContext(), getString(newRole.displayRes));
                             load();

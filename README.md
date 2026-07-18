@@ -200,6 +200,12 @@ firebase.json         deploy config    ·    .firebaserc  (set your project id)
   Docs are denormalised and **email-keyed**, so who sees what (a student's own groups, a tutor's
   roster, a parent's children) is decided by `ContentScope` — a small, unit-tested pure function —
   with no cross-device id juggling. Without Firebase, the same screens read the local SQLite store.
+- 🔔 **Push notifications (FCM)** — `notifyOnNews` pings the whole club on a new update,
+  `notifyOnAssignment` pings a group's students (and their parents) on a new assignment, and
+  `notifyOnApproval` fires when an account is approved. Each device stores its token on
+  `users/{uid}.fcmTokens`; dead tokens are pruned automatically. On Android 13+ the app asks for the
+  notification permission. Admin approve/reject/role changes are mirrored to the cloud profile so they
+  reach the member on any device.
 
 > **Billing:** the scheduled function needs the **Blaze** plan (generous free tier — this
 > workload is effectively free). Firestore/Storage/Auth work on the free Spark plan.

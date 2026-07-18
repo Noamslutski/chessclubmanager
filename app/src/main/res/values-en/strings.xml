@@ -264,6 +264,10 @@
     <string name="gam_cat_podium">podium</string>
     <string name="gam_cat_streak">day streak</string>
 
+    <!-- Notifications -->
+    <string name="notif_channel_name">Club updates</string>
+    <string name="notif_channel_desc">News, assignments and account approvals</string>
+
     <string-array name="weekdays">
         <item>Sunday</item>
         <item>Monday</item>
